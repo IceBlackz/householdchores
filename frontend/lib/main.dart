@@ -3,7 +3,6 @@ import 'package:pocketbase/pocketbase.dart';
 import 'dashboard_screen.dart';
 
 // 1. Initialize the PocketBase client
-// (Change to http://10.0.2.2:9010 if you ever switch to an Android Emulator!)
 final pb = PocketBase('http://127.0.0.1:9010');
 
 void main() {
@@ -38,7 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
-// 2. The function that talks to your backend
+  // 2. The function that talks to your backend
   Future<void> _login() async {
     setState(() => _isLoading = true);
 
@@ -60,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
         
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const DashboardScreen()),
-      );
+        );
       }
     } on ClientException catch (e) {
       // PocketBase specifically throws this when the server rejects the request
@@ -113,6 +112,8 @@ class _LoginScreenState extends State<LoginScreen> {
               controller: _passwordController,
               decoration: const InputDecoration(labelText: 'Password'),
               obscureText: true, // Hides the password
+              textInputAction: TextInputAction.done, // Changes mobile keyboard return key to "Done"
+              onSubmitted: (_) => _login(), // Triggers the login function when you press Enter!
             ),
             const SizedBox(height: 32),
             _isLoading

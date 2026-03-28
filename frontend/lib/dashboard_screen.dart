@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'main.dart'; // This lets us access the 'pb' variable we created earlier
+import 'add_chore_screen.dart';
+import 'complete_chore_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -62,6 +64,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          // Wait for the AddChoreScreen to pop back. 
+          // If it returns true (meaning a chore was saved), refresh the list!
+          final result = await Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) => const AddChoreScreen()),
+          );
+          
+          if (result == true) {
+            _fetchChores(); // Reload the list to show the new task
+          }
+        },
+        child: const Icon(Icons.add),
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _chores.isEmpty
@@ -76,8 +92,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         title: Text(chore.data['title'] ?? 'Unknown Task'),
                         subtitle: Text(chore.data['description'] ?? 'No description'),
                         trailing: Text('Every ${chore.data['interval_desired_days']} days'),
-                        onTap: () {
-                          // We will add the "Complete Task" logic here later!
+                        onTap: () async {
+                          final result = await Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => CompleteChoreScreen(chore: chore),
+                            ),
+                          );
+                          
+                          if (result == true) {
+                            _fetchChores(); // Reload the chores list
+                            
+                            // Show the confirmation right here on the Dashboard!
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Awesome! Task completed.'), 
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          }
                         },
                       ),
                     );
