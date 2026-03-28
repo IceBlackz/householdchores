@@ -1,0 +1,12 @@
+services:
+  pocketbase:
+    build: .
+    container_name: pocketbase-server
+    restart: unless-stopped
+    ports:
+      - "9010:9010"
+    env_file:
+      - .env
+    volumes:
+      - ./pb_data:/pb/pb_data
+      - ./pb_migrations:/pb/pb_migrations
