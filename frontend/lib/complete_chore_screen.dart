@@ -21,9 +21,7 @@ class _CompleteChoreScreenState extends State<CompleteChoreScreen> {
   XFile? _afterPhoto;
   bool _isSaving = false;
 
-  // Function to pick an image
   Future<void> _pickImage(bool isBefore) async {
-    // Note: On Windows Desktop, this automatically opens the File Explorer!
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
       setState(() {
@@ -36,47 +34,41 @@ class _CompleteChoreScreenState extends State<CompleteChoreScreen> {
     }
   }
 
-  // Function to save the log to PocketBase
   Future<void> _submitLog() async {
     setState(() => _isSaving = true);
 
     try {
       final body = <String, dynamic>{
         "chore": widget.chore.id,
-        "completed_by": pb.authStore.record?.id, // Gets the logged-in user's ID
+        "completed_by": pb.authStore.record?.id, 
         "notes": _notesController.text,
       };
 
-      // Prepare the files for PocketBase (Web-Safe version!)
       final List<http.MultipartFile> files = [];
       
       if (_beforePhoto != null) {
-        // Read the image as raw bytes instead of a file path
         final beforeBytes = await _beforePhoto!.readAsBytes();
-        files.add(http.MultipartFile.fromBytes(
-          'photo_before', 
-          beforeBytes, 
-          filename: _beforePhoto!.name,
-        ));
+        files.add(http.MultipartFile.fromBytes('photo_before', beforeBytes, filename: _beforePhoto!.name));
       }
       
       if (_afterPhoto != null) {
         final afterBytes = await _afterPhoto!.readAsBytes();
-        files.add(http.MultipartFile.fromBytes(
-          'photo_after', 
-          afterBytes, 
-          filename: _afterPhoto!.name,
-        ));
+        files.add(http.MultipartFile.fromBytes('photo_after', afterBytes, filename: _afterPhoto!.name));
       }
 
-      // Send both text data and files at the same time
+      // 1. Create the completion log
       await pb.collection('chore_logs').create(body: body, files: files);
 
-      // This is the line that was missing! It closes the screen and returns "true".
+      // 2. NEW: If this task had a one-time assignee, clear it out so it resets to the default person!
+      if (widget.chore.getStringValue('onetimeonly_assignee').isNotEmpty) {
+        await pb.collection('chores').update(widget.chore.id, body: {
+          "onetimeonly_assignee": "" 
+        });
+      }
+
       if (mounted) {
         Navigator.of(context).pop(true); 
       }
-
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -91,14 +83,13 @@ class _CompleteChoreScreenState extends State<CompleteChoreScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Complete: ${widget.chore.data['title']}')),
+      appBar: AppBar(title: Text('Complete: ${widget.chore.getStringValue('title')}')),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
           Text('Marking this task as done! Feel free to add proof.', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 24),
           
-          // Before Photo Button
           OutlinedButton.icon(
             onPressed: () => _pickImage(true),
             icon: const Icon(Icons.camera_alt),
@@ -106,7 +97,6 @@ class _CompleteChoreScreenState extends State<CompleteChoreScreen> {
           ),
           const SizedBox(height: 12),
           
-          // After Photo Button
           OutlinedButton.icon(
             onPressed: () => _pickImage(false),
             icon: const Icon(Icons.camera_alt_outlined),
