@@ -1,0 +1,158 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "Household Chores",
+  "login": "Login",
+  "logout": "Logout",
+  "email": "Email",
+  "password": "Password",
+  "welcomeBack": "Welcome back, {name}!",
+  "@welcomeBack": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "incorrectCredentials": "Incorrect email or password. Please try again.",
+  "cannotConnect": "Cannot connect to the server. Check your network.",
+  "loginFailed": "Login failed: {error}",
+  "@loginFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "householdLogin": "Household Login",
+  "householdChores": "Household Chores",
+
+  "addNewChore": "Add New Chore",
+  "editChore": "Edit Chore",
+  "saveChore": "Save Chore",
+  "updateChore": "Update Chore",
+  "choreAdded": "Chore added!",
+  "choreUpdated": "Chore updated!",
+  "failedToSave": "Failed to save: {error}",
+  "@failedToSave": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "choreTitle": "Chore Title (e.g. Clean Toilet)",
+  "titleRequired": "Please enter a title",
+  "description": "Description (Optional)",
+  "defaultAssignee": "Default Assignee",
+  "unassignedAnyone": "Unassigned (Anyone)",
+  "oneTimeOverride": "One-Time Override (This cycle only)",
+  "noneUseDefault": "None (Use Default)",
+  "desiredInterval": "Desired Interval",
+  "unitLabel": "Unit",
+  "maxDeadline": "Max Deadline",
+  "required": "Required",
+  "season": "Season",
+  "seasonOverrides": "Season-Specific Overrides",
+  "seasonOverridesSubtitle": "Override interval per season (0 = use default)",
+  "spring": "Spring",
+  "summer": "Summer",
+  "autumn": "Autumn",
+  "winter": "Winter",
+  "seasonFieldLabel": "{season} ({unit})",
+  "@seasonFieldLabel": {
+    "placeholders": {
+      "season": { "type": "String" },
+      "unit": { "type": "String" }
+    }
+  },
+  "seasonFieldHint": "0 = use default",
+
+  "intervalDays": "Days",
+  "intervalWeeks": "Weeks",
+  "intervalMonths": "Months",
+  "intervalQuarters": "Quarters",
+  "intervalYears": "Years",
+
+  "completeChore": "Complete: {title}",
+  "@completeChore": {
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  },
+  "markingTaskAsDone": "Marking this task as done! Feel free to add proof.",
+  "attachBeforePhoto": "Attach \"Before\" Photo",
+  "beforePhotoSelected": "Before Photo Selected!",
+  "attachAfterPhoto": "Attach \"After\" Photo",
+  "afterPhotoSelected": "After Photo Selected!",
+  "notes": "Notes (Optional)",
+  "notesHint": "e.g. Ran out of soap!",
+  "submitCompletion": "Submit Completion",
+  "failedToSubmit": "Failed to submit: {error}",
+  "@failedToSubmit": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "taskCompleted": "Awesome! Task completed.",
+
+  "noChoresRelax": "No chores here! Time to relax?",
+  "retry": "Retry",
+
+  "deleteChore": "Delete Chore",
+  "deleteConfirm": "Delete \"{title}\"? This cannot be undone.",
+  "@deleteConfirm": {
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  },
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "choreDeleted": "Chore deleted.",
+  "failedToDelete": "Failed to delete: {error}",
+  "@failedToDelete": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "history": "History: {title}",
+  "@history": {
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  },
+  "noHistoryYet": "No completions recorded yet.",
+  "failedToLoadHistory": "Failed to load history: {error}",
+  "@failedToLoadHistory": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "unknownUser": "Unknown",
+  "covering": "{name} (Covering)",
+  "@covering": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+
+  "neverCompleted": "Never completed",
+  "overdue": "Overdue ({days} days)",
+  "@overdue": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "dueToday": "Due today",
+  "dueInDays": "Due in {days} d",
+  "@dueInDays": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+
+  "viewHistory": "View history",
+  "editChoreTooltip": "Edit chore",
+  "deleteChoreTooltip": "Delete chore",
+
+  "selectLanguage": "Select Language",
+  "languageEnglish": "English",
+  "languageDutch": "Nederlands",
+  "languageSpanish": "Español"
+}
