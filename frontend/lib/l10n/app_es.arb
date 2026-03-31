@@ -1,19 +1,26 @@
-{
+﻿{
   "@@locale": "es",
-
   "appTitle": "Tareas del Hogar",
   "login": "Iniciar Sesión",
   "logout": "Cerrar Sesión",
   "email": "Correo Electrónico",
   "password": "Contraseña",
   "welcomeBack": "¡Bienvenido de vuelta, {name}!",
+  "@welcomeBack": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
   "incorrectCredentials": "Correo o contraseña incorrectos. Inténtalo de nuevo.",
   "cannotConnect": "No se puede conectar al servidor. Comprueba tu red.",
   "loginFailed": "Error al iniciar sesión: {error}",
-
+  "@loginFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
   "householdLogin": "Inicio de Sesión del Hogar",
   "householdChores": "Tareas del Hogar",
-
   "addNewChore": "Añadir Nueva Tarea",
   "editChore": "Editar Tarea",
   "saveChore": "Guardar Tarea",
@@ -21,6 +28,11 @@
   "choreAdded": "¡Tarea añadida!",
   "choreUpdated": "¡Tarea actualizada!",
   "failedToSave": "Error al guardar: {error}",
+  "@failedToSave": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
   "choreTitle": "Nombre de la Tarea (ej. Limpiar el baño)",
   "titleRequired": "Por favor introduce un nombre",
   "description": "Descripción (Opcional)",
@@ -40,15 +52,24 @@
   "autumn": "Otoño",
   "winter": "Invierno",
   "seasonFieldLabel": "{season} ({unit})",
+  "@seasonFieldLabel": {
+    "placeholders": {
+      "season": { "type": "String" },
+      "unit": { "type": "String" }
+    }
+  },
   "seasonFieldHint": "0 = usar defecto",
-
   "intervalDays": "Días",
   "intervalWeeks": "Semanas",
   "intervalMonths": "Meses",
   "intervalQuarters": "Trimestres",
   "intervalYears": "Años",
-
   "completeChore": "Completar: {title}",
+  "@completeChore": {
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  },
   "markingTaskAsDone": "¡Marcando esta tarea como completada! Añade pruebas si quieres.",
   "attachBeforePhoto": "Adjuntar Foto \"Antes\"",
   "beforePhotoSelected": "¡Foto Antes Seleccionada!",
@@ -58,35 +79,108 @@
   "notesHint": "ej. ¡Se acabó el jabón!",
   "submitCompletion": "Enviar Tarea Completada",
   "failedToSubmit": "Error al enviar: {error}",
+  "@failedToSubmit": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
   "taskCompleted": "¡Genial! Tarea completada.",
-
   "noChoresRelax": "¡No hay tareas aquí! ¿Hora de descansar?",
   "retry": "Reintentar",
-
   "deleteChore": "Eliminar Tarea",
   "deleteConfirm": "¿Eliminar \"{title}\"? No se puede deshacer.",
+  "@deleteConfirm": {
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  },
   "cancel": "Cancelar",
   "delete": "Eliminar",
   "choreDeleted": "Tarea eliminada.",
   "failedToDelete": "Error al eliminar: {error}",
-
+  "@failedToDelete": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
   "history": "Historial: {title}",
+  "@history": {
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  },
   "noHistoryYet": "Aún no hay completaciones registradas.",
   "failedToLoadHistory": "Error al cargar historial: {error}",
+  "@failedToLoadHistory": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
   "unknownUser": "Desconocido",
   "covering": "{name} (Sustituyendo)",
-
+  "@covering": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
   "neverCompleted": "Nunca completada",
   "overdue": "Atrasada ({days} días)",
+  "@overdue": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
   "dueToday": "Vence hoy",
   "dueInDays": "Vence en {days} d",
-
+  "@dueInDays": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
   "viewHistory": "Ver historial",
   "editChoreTooltip": "Editar tarea",
   "deleteChoreTooltip": "Eliminar tarea",
-
   "selectLanguage": "Seleccionar Idioma",
   "languageEnglish": "English",
   "languageDutch": "Nederlands",
-  "languageSpanish": "Español"
+  "languageSpanish": "Español",
+  "houseConfiguration": "Configuración del Hogar",
+  "houseName": "Nombre del Hogar",
+  "serverUrl": "URL del Servidor",
+  "homeAssistantWebhook": "Webhook de Home Assistant",
+  "testConnection": "Probar Conexión",
+  "connectionValid": "¡Conexión válida!",
+  "activeHouse": "Hogar Activo",
+  "noActiveHouse": "No hay hogar activo",
+  "addNewHouse": "Añadir Nuevo Hogar",
+  "houseAdded": "¡Hogar añadido!",
+  "houseUpdated": "¡Hogar actualizado!",
+  "houseDeleted": "Hogar eliminado.",
+  "deleteHouse": "Eliminar Hogar",
+  "deleteHouseConfirm": "¿Eliminar \"{name}\"? No se puede deshacer.",
+  "deleteHouseFailed": "Error al eliminar hogar: {error}",
+  "saveFailed": "Error al guardar: {error}",
+  "edit": "Editar",
+  "enterHouseNameHint": "ej. Casa, Oficina, Abuela",
+  "enterServerUrlHint": "ej. http://127.0.0.1:9010",
+  "enterHaWebhookUrlHint": "URL opcional del webhook de Home Assistant",
+  "invalidUrlError": "Por favor introduce una URL válida",
+  "requiredField": "Este campo es obligatorio",
+  "haSettingsDescription": "Configura las URLs de webhook de Home Assistant para cada hogar. Esto es opcional y solo se necesita si quieres recibir notificaciones de tareas en Home Assistant.",
+  "activeHouseHaWebhook": "Webhook del Hogar Activo",
+  "haWebhookDescription": "URL del webhook para notificaciones de Home Assistant",
+  "haWebhookNote": "Nota: Las URLs de webhook se almacenan localmente y no se sincronizan entre dispositivos.",
+  "seasonFilter": "Filtro por Temporada",
+  "allSeasons": "Todas las Temporadas",
+  "seasonFilterAll": "Todas",
+  "seasonFilterSpring": "Primavera",
+  "seasonFilterSummer": "Verano",
+  "seasonFilterAutumn": "Otoño",
+  "seasonFilterWinter": "Invierno",
+  "pastDeadline": "!! {days}d pasado max",
+  "@pastDeadline": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  }
 }

@@ -29,7 +29,6 @@ class Chore {
   final String season;
   final DateTime created;
 
-  /// Per-season override values (in intervalUnit). 0 or null means use intervalDesiredDays.
   final int? seasonSpringOverride;
   final int? seasonSummerOverride;
   final int? seasonAutumnOverride;
@@ -39,15 +38,11 @@ class Chore {
   final AppUser? onetimeOnlyAssignee;
 
   bool get hasOneTimeOverride => onetimeOnlyAssignee != null;
-
   AppUser? get activeAssignee => onetimeOnlyAssignee ?? defaultAssignee;
-
   String get activeAssigneeName =>
       activeAssignee?.displayName ?? AppConstants.unassignedLabel;
-
   String get activeAssigneeId => activeAssignee?.id ?? '';
 
-  /// Returns the season-specific interval override if set (> 0), otherwise null.
   int? seasonOverride(String season) {
     int? v;
     switch (season) {
@@ -59,12 +54,16 @@ class Chore {
     return (v != null && v > 0) ? v : null;
   }
 
-  /// Computes the next due date from [lastCompleted], taking season overrides
-  /// and interval unit into account.
+  /// Desired due date — uses season overrides and interval unit.
   DateTime nextDueDate(DateTime lastCompleted, String activeSeason) {
     final override = seasonOverride(activeSeason);
     final value = override ?? intervalDesiredDays;
     return _addInterval(lastCompleted, value, intervalUnit);
+  }
+
+  /// Hard deadline — uses intervalMaxDays with no season overrides.
+  DateTime maxDueDate(DateTime lastCompleted) {
+    return _addInterval(lastCompleted, intervalMaxDays, intervalUnit);
   }
 
   static DateTime _addInterval(DateTime base, int value, String unit) {

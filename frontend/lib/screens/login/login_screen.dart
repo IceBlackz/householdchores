@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../l10n/app_localizations.dart';
+import '../../providers/house_provider.dart';
 import '../../services/auth_service.dart';
+import '../configuration/configuration_screen.dart';
 import '../dashboard/dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -33,21 +35,20 @@ class _LoginScreenState extends State<LoginScreen> {
           );
       if (mounted) {
         final name = context.read<AuthService>().currentUserName ?? 'User';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.welcomeBack(name)),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(l10n.welcomeBack(name)),
+          backgroundColor: Colors.green,
+        ));
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const DashboardScreen()),
         );
       }
     } on AuthException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message), backgroundColor: Colors.red.shade700),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(e.message),
+          backgroundColor: Colors.red.shade700,
+        ));
       }
     } catch (e) {
       if (mounted) {
@@ -63,13 +64,68 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final houseProvider = context.watch<HouseProvider>();
+
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.householdLogin)),
+      appBar: AppBar(
+        title: Text(l10n.householdLogin),
+        actions: [
+          // House switcher
+          PopupMenuButton<String>(
+            onSelected: (houseId) async {
+              await context.read<HouseProvider>().switchHouse(houseId);
+            },
+            itemBuilder: (context) => houseProvider.houses
+                .map((house) => PopupMenuItem(
+                      value: house.id,
+                      child: Row(
+                        children: [
+                          Icon(Icons.home,
+                              color: house.id == houseProvider.activeHouseId
+                                  ? Colors.teal
+                                  : Colors.grey),
+                          const SizedBox(width: 8),
+                          Expanded(child: Text(house.name)),
+                        ],
+                      ),
+                    ))
+                .toList(),
+          ),
+          // Configuration screen button
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: l10n.houseConfiguration,
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const ConfigurationScreen(),
+              ),
+            ),
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Consumer<HouseProvider>(
+              builder: (context, hp, _) => Text(
+                hp.activeHouse?.name ?? l10n.householdChores,
+                style: Theme.of(context)
+                    .textTheme
+                    .headlineSmall
+                    ?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              houseProvider.activeHouseUrl,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 32),
             TextField(
               controller: _emailController,
               decoration: InputDecoration(labelText: l10n.email),

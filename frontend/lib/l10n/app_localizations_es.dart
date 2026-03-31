@@ -271,4 +271,118 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get languageSpanish => 'Español';
+
+  @override
+  String get houseConfiguration => 'Configuración del Hogar';
+
+  @override
+  String get houseName => 'Nombre del Hogar';
+
+  @override
+  String get serverUrl => 'URL del Servidor';
+
+  @override
+  String get homeAssistantWebhook => 'Webhook de Home Assistant';
+
+  @override
+  String get testConnection => 'Probar Conexión';
+
+  @override
+  String get connectionValid => '¡Conexión válida!';
+
+  @override
+  String get activeHouse => 'Hogar Activo';
+
+  @override
+  String get noActiveHouse => 'No hay hogar activo';
+
+  @override
+  String get addNewHouse => 'Añadir Nuevo Hogar';
+
+  @override
+  String get houseAdded => '¡Hogar añadido!';
+
+  @override
+  String get houseUpdated => '¡Hogar actualizado!';
+
+  @override
+  String get houseDeleted => 'Hogar eliminado.';
+
+  @override
+  String get deleteHouse => 'Eliminar Hogar';
+
+  @override
+  String deleteHouseConfirm(Object name) {
+    return '¿Eliminar \"$name\"? No se puede deshacer.';
+  }
+
+  @override
+  String deleteHouseFailed(Object error) {
+    return 'Error al eliminar hogar: $error';
+  }
+
+  @override
+  String saveFailed(Object error) {
+    return 'Error al guardar: $error';
+  }
+
+  @override
+  String get edit => 'Editar';
+
+  @override
+  String get enterHouseNameHint => 'ej. Casa, Oficina, Abuela';
+
+  @override
+  String get enterServerUrlHint => 'ej. http://127.0.0.1:9010';
+
+  @override
+  String get enterHaWebhookUrlHint =>
+      'URL opcional del webhook de Home Assistant';
+
+  @override
+  String get invalidUrlError => 'Por favor introduce una URL válida';
+
+  @override
+  String get requiredField => 'Este campo es obligatorio';
+
+  @override
+  String get haSettingsDescription =>
+      'Configura las URLs de webhook de Home Assistant para cada hogar. Esto es opcional y solo se necesita si quieres recibir notificaciones de tareas en Home Assistant.';
+
+  @override
+  String get activeHouseHaWebhook => 'Webhook del Hogar Activo';
+
+  @override
+  String get haWebhookDescription =>
+      'URL del webhook para notificaciones de Home Assistant';
+
+  @override
+  String get haWebhookNote =>
+      'Nota: Las URLs de webhook se almacenan localmente y no se sincronizan entre dispositivos.';
+
+  @override
+  String get seasonFilter => 'Filtro por Temporada';
+
+  @override
+  String get allSeasons => 'Todas las Temporadas';
+
+  @override
+  String get seasonFilterAll => 'Todas';
+
+  @override
+  String get seasonFilterSpring => 'Primavera';
+
+  @override
+  String get seasonFilterSummer => 'Verano';
+
+  @override
+  String get seasonFilterAutumn => 'Otoño';
+
+  @override
+  String get seasonFilterWinter => 'Invierno';
+
+  @override
+  String pastDeadline(int days) {
+    return '!! ${days}d pasado max';
+  }
 }

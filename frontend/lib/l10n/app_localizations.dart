@@ -567,6 +567,210 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Español'**
   String get languageSpanish;
+
+  /// No description provided for @houseConfiguration.
+  ///
+  /// In en, this message translates to:
+  /// **'House Configuration'**
+  String get houseConfiguration;
+
+  /// No description provided for @houseName.
+  ///
+  /// In en, this message translates to:
+  /// **'House Name'**
+  String get houseName;
+
+  /// No description provided for @serverUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Server URL'**
+  String get serverUrl;
+
+  /// No description provided for @homeAssistantWebhook.
+  ///
+  /// In en, this message translates to:
+  /// **'Home Assistant Webhook'**
+  String get homeAssistantWebhook;
+
+  /// No description provided for @testConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Test Connection'**
+  String get testConnection;
+
+  /// No description provided for @connectionValid.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection valid!'**
+  String get connectionValid;
+
+  /// No description provided for @activeHouse.
+  ///
+  /// In en, this message translates to:
+  /// **'Active House'**
+  String get activeHouse;
+
+  /// No description provided for @noActiveHouse.
+  ///
+  /// In en, this message translates to:
+  /// **'No active house'**
+  String get noActiveHouse;
+
+  /// No description provided for @addNewHouse.
+  ///
+  /// In en, this message translates to:
+  /// **'Add New House'**
+  String get addNewHouse;
+
+  /// No description provided for @houseAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'House added!'**
+  String get houseAdded;
+
+  /// No description provided for @houseUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'House updated!'**
+  String get houseUpdated;
+
+  /// No description provided for @houseDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'House deleted.'**
+  String get houseDeleted;
+
+  /// No description provided for @deleteHouse.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete House'**
+  String get deleteHouse;
+
+  /// No description provided for @deleteHouseConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{name}\"? This cannot be undone.'**
+  String deleteHouseConfirm(Object name);
+
+  /// No description provided for @deleteHouseFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete house: {error}'**
+  String deleteHouseFailed(Object error);
+
+  /// No description provided for @saveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save: {error}'**
+  String saveFailed(Object error);
+
+  /// No description provided for @edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
+  /// No description provided for @enterHouseNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Home, Office, Grandma\'s'**
+  String get enterHouseNameHint;
+
+  /// No description provided for @enterServerUrlHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. http://127.0.0.1:9010'**
+  String get enterServerUrlHint;
+
+  /// No description provided for @enterHaWebhookUrlHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional Home Assistant webhook URL'**
+  String get enterHaWebhookUrlHint;
+
+  /// No description provided for @invalidUrlError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid URL'**
+  String get invalidUrlError;
+
+  /// No description provided for @requiredField.
+  ///
+  /// In en, this message translates to:
+  /// **'This field is required'**
+  String get requiredField;
+
+  /// No description provided for @haSettingsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure Home Assistant webhook URLs for each house. This is optional and only needed if you want to receive chore notifications in Home Assistant.'**
+  String get haSettingsDescription;
+
+  /// No description provided for @activeHouseHaWebhook.
+  ///
+  /// In en, this message translates to:
+  /// **'Active House Webhook'**
+  String get activeHouseHaWebhook;
+
+  /// No description provided for @haWebhookDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Webhook URL for Home Assistant notifications'**
+  String get haWebhookDescription;
+
+  /// No description provided for @haWebhookNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note: Webhook URLs are stored locally and not synced across devices.'**
+  String get haWebhookNote;
+
+  /// No description provided for @seasonFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Season Filter'**
+  String get seasonFilter;
+
+  /// No description provided for @allSeasons.
+  ///
+  /// In en, this message translates to:
+  /// **'All Seasons'**
+  String get allSeasons;
+
+  /// No description provided for @seasonFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get seasonFilterAll;
+
+  /// No description provided for @seasonFilterSpring.
+  ///
+  /// In en, this message translates to:
+  /// **'Spring'**
+  String get seasonFilterSpring;
+
+  /// No description provided for @seasonFilterSummer.
+  ///
+  /// In en, this message translates to:
+  /// **'Summer'**
+  String get seasonFilterSummer;
+
+  /// No description provided for @seasonFilterAutumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Autumn'**
+  String get seasonFilterAutumn;
+
+  /// No description provided for @seasonFilterWinter.
+  ///
+  /// In en, this message translates to:
+  /// **'Winter'**
+  String get seasonFilterWinter;
+
+  /// No description provided for @pastDeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'!! {days}d past max'**
+  String pastDeadline(int days);
 }
 
 class _AppLocalizationsDelegate

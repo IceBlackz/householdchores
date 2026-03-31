@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /c/Users/Falco/Development/projects/householdchores status)",
+      "Bash(flutter analyze:*)",
+      "Bash(flutter test:*)",
+      "Bash(flutter pub:*)",
+      "Bash(flutter gen-l10n:*)",
+      "Bash(flutter build:*)",
+      "Bash(find c:/Users/Falco/Development/projects/householdchores/frontend/.dart_tool -name app_localizations*)",
+      "Bash(find c:/Users/Falco/Development/projects/householdchores/frontend -name app_localizations*)"
+    ]
+  }
+}

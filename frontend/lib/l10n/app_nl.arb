@@ -1,19 +1,26 @@
-{
+﻿{
   "@@locale": "nl",
-
   "appTitle": "Huishoudelijke Taken",
   "login": "Inloggen",
   "logout": "Uitloggen",
   "email": "E-mail",
   "password": "Wachtwoord",
   "welcomeBack": "Welkom terug, {name}!",
+  "@welcomeBack": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
   "incorrectCredentials": "Onjuist e-mailadres of wachtwoord. Probeer het opnieuw.",
   "cannotConnect": "Kan geen verbinding maken met de server. Controleer je netwerk.",
   "loginFailed": "Inloggen mislukt: {error}",
-
+  "@loginFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
   "householdLogin": "Huishouden Inloggen",
   "householdChores": "Huishoudelijke Taken",
-
   "addNewChore": "Nieuwe Taak Toevoegen",
   "editChore": "Taak Bewerken",
   "saveChore": "Taak Opslaan",
@@ -21,6 +28,11 @@
   "choreAdded": "Taak toegevoegd!",
   "choreUpdated": "Taak bijgewerkt!",
   "failedToSave": "Opslaan mislukt: {error}",
+  "@failedToSave": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
   "choreTitle": "Taaknaam (bijv. Toilet schoonmaken)",
   "titleRequired": "Voer een naam in",
   "description": "Omschrijving (Optioneel)",
@@ -40,15 +52,24 @@
   "autumn": "Herfst",
   "winter": "Winter",
   "seasonFieldLabel": "{season} ({unit})",
+  "@seasonFieldLabel": {
+    "placeholders": {
+      "season": { "type": "String" },
+      "unit": { "type": "String" }
+    }
+  },
   "seasonFieldHint": "0 = gebruik standaard",
-
   "intervalDays": "Dagen",
   "intervalWeeks": "Weken",
   "intervalMonths": "Maanden",
   "intervalQuarters": "Kwartalen",
   "intervalYears": "Jaren",
-
   "completeChore": "Voltooien: {title}",
+  "@completeChore": {
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  },
   "markingTaskAsDone": "Deze taak als voltooid markeren! Voeg gerust bewijs toe.",
   "attachBeforePhoto": "\"Voor\"-foto Toevoegen",
   "beforePhotoSelected": "Voor-foto Geselecteerd!",
@@ -58,35 +79,108 @@
   "notesHint": "bijv. Zeep was op!",
   "submitCompletion": "Voltooiing Indienen",
   "failedToSubmit": "Indienen mislukt: {error}",
+  "@failedToSubmit": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
   "taskCompleted": "Geweldig! Taak voltooid.",
-
   "noChoresRelax": "Geen taken hier! Tijd om te ontspannen?",
   "retry": "Opnieuw proberen",
-
   "deleteChore": "Taak Verwijderen",
   "deleteConfirm": "Verwijder \"{title}\"? Dit kan niet ongedaan worden gemaakt.",
+  "@deleteConfirm": {
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  },
   "cancel": "Annuleren",
   "delete": "Verwijderen",
   "choreDeleted": "Taak verwijderd.",
   "failedToDelete": "Verwijderen mislukt: {error}",
-
+  "@failedToDelete": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
   "history": "Geschiedenis: {title}",
+  "@history": {
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  },
   "noHistoryYet": "Nog geen voltooiingen geregistreerd.",
   "failedToLoadHistory": "Laden van geschiedenis mislukt: {error}",
+  "@failedToLoadHistory": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
   "unknownUser": "Onbekend",
   "covering": "{name} (Vervangt)",
-
+  "@covering": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
   "neverCompleted": "Nooit voltooid",
   "overdue": "Te laat ({days} dagen)",
+  "@overdue": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
   "dueToday": "Vandaag vervalt",
   "dueInDays": "Vervalt over {days} d",
-
+  "@dueInDays": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
   "viewHistory": "Geschiedenis bekijken",
   "editChoreTooltip": "Taak bewerken",
   "deleteChoreTooltip": "Taak verwijderen",
-
   "selectLanguage": "Taal Selecteren",
   "languageEnglish": "English",
   "languageDutch": "Nederlands",
-  "languageSpanish": "Español"
+  "languageSpanish": "Español",
+  "houseConfiguration": "Huis Configuratie",
+  "houseName": "Huis Naam",
+  "serverUrl": "Server URL",
+  "homeAssistantWebhook": "Home Assistant Webhook",
+  "testConnection": "Verbinding Testen",
+  "connectionValid": "Verbinding geldig!",
+  "activeHouse": "Actief Huis",
+  "noActiveHouse": "Geen actief huis",
+  "addNewHouse": "Nieuw Huis Toevoegen",
+  "houseAdded": "Huis toegevoegd!",
+  "houseUpdated": "Huis bijgewerkt!",
+  "houseDeleted": "Huis verwijderd.",
+  "deleteHouse": "Huis Verwijderen",
+  "deleteHouseConfirm": "Verwijder \"{name}\"? Dit kan niet ongedaan worden gemaakt.",
+  "deleteHouseFailed": "Verwijderen van huis mislukt: {error}",
+  "saveFailed": "Opslaan mislukt: {error}",
+  "edit": "Bewerken",
+  "enterHouseNameHint": "bijv. Thuis, Kantoor, Oma's",
+  "enterServerUrlHint": "bijv. http://127.0.0.1:9010",
+  "enterHaWebhookUrlHint": "Optionele Home Assistant webhook URL",
+  "invalidUrlError": "Voer een geldige URL in",
+  "requiredField": "Dit veld is verplicht",
+  "haSettingsDescription": "Configureer Home Assistant webhook URLs voor elk huis. Dit is optioneel en alleen nodig als je chore notificaties in Home Assistant wilt ontvangen.",
+  "activeHouseHaWebhook": "Actief Huis Webhook",
+  "haWebhookDescription": "Webhook URL voor Home Assistant notificaties",
+  "haWebhookNote": "Opmerking: Webhook URLs worden lokaal opgeslagen en niet gesynchroniseerd tussen apparaten.",
+  "seasonFilter": "Seizoen Filter",
+  "allSeasons": "Alle Seizoenen",
+  "seasonFilterAll": "Alle",
+  "seasonFilterSpring": "Lente",
+  "seasonFilterSummer": "Zomer",
+  "seasonFilterAutumn": "Herfst",
+  "seasonFilterWinter": "Winter",
+  "pastDeadline": "!! {days}d na max",
+  "@pastDeadline": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  }
 }

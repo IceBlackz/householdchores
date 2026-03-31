@@ -271,4 +271,117 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get languageSpanish => 'Español';
+
+  @override
+  String get houseConfiguration => 'House Configuration';
+
+  @override
+  String get houseName => 'House Name';
+
+  @override
+  String get serverUrl => 'Server URL';
+
+  @override
+  String get homeAssistantWebhook => 'Home Assistant Webhook';
+
+  @override
+  String get testConnection => 'Test Connection';
+
+  @override
+  String get connectionValid => 'Connection valid!';
+
+  @override
+  String get activeHouse => 'Active House';
+
+  @override
+  String get noActiveHouse => 'No active house';
+
+  @override
+  String get addNewHouse => 'Add New House';
+
+  @override
+  String get houseAdded => 'House added!';
+
+  @override
+  String get houseUpdated => 'House updated!';
+
+  @override
+  String get houseDeleted => 'House deleted.';
+
+  @override
+  String get deleteHouse => 'Delete House';
+
+  @override
+  String deleteHouseConfirm(Object name) {
+    return 'Delete \"$name\"? This cannot be undone.';
+  }
+
+  @override
+  String deleteHouseFailed(Object error) {
+    return 'Failed to delete house: $error';
+  }
+
+  @override
+  String saveFailed(Object error) {
+    return 'Failed to save: $error';
+  }
+
+  @override
+  String get edit => 'Edit';
+
+  @override
+  String get enterHouseNameHint => 'e.g. Home, Office, Grandma\'s';
+
+  @override
+  String get enterServerUrlHint => 'e.g. http://127.0.0.1:9010';
+
+  @override
+  String get enterHaWebhookUrlHint => 'Optional Home Assistant webhook URL';
+
+  @override
+  String get invalidUrlError => 'Please enter a valid URL';
+
+  @override
+  String get requiredField => 'This field is required';
+
+  @override
+  String get haSettingsDescription =>
+      'Configure Home Assistant webhook URLs for each house. This is optional and only needed if you want to receive chore notifications in Home Assistant.';
+
+  @override
+  String get activeHouseHaWebhook => 'Active House Webhook';
+
+  @override
+  String get haWebhookDescription =>
+      'Webhook URL for Home Assistant notifications';
+
+  @override
+  String get haWebhookNote =>
+      'Note: Webhook URLs are stored locally and not synced across devices.';
+
+  @override
+  String get seasonFilter => 'Season Filter';
+
+  @override
+  String get allSeasons => 'All Seasons';
+
+  @override
+  String get seasonFilterAll => 'All';
+
+  @override
+  String get seasonFilterSpring => 'Spring';
+
+  @override
+  String get seasonFilterSummer => 'Summer';
+
+  @override
+  String get seasonFilterAutumn => 'Autumn';
+
+  @override
+  String get seasonFilterWinter => 'Winter';
+
+  @override
+  String pastDeadline(int days) {
+    return '!! ${days}d past max';
+  }
 }

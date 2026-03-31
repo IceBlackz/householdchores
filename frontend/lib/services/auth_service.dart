@@ -10,13 +10,17 @@ class AuthException implements Exception {
   String toString() => message;
 }
 
+/// Service for handling user authentication.
+/// Uses the shared PocketBaseService client so auth state is visible
+/// to ChoreService and any other services on the same client.
 class AuthService {
-  AuthService() : _pb = PocketBaseService().client;
+  static final AuthService _instance = AuthService._internal();
+  factory AuthService() => _instance;
+  AuthService._internal();
 
-  final PocketBase _pb;
+  PocketBase get _pb => PocketBaseService().client;
 
   bool get isLoggedIn => _pb.authStore.isValid;
-
   String? get currentUserId => _pb.authStore.record?.id;
 
   String? get currentUserName {
@@ -38,7 +42,11 @@ class AuthService {
     }
   }
 
-  void logout() {
-    _pb.authStore.clear();
+  void logout() => _pb.authStore.clear();
+
+  AppUser? getCurrentUser() {
+    final record = _pb.authStore.record;
+    if (record == null) return null;
+    return AppUser.fromRecord(record);
   }
 }

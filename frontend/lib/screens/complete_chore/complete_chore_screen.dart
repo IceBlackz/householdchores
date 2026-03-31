@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../l10n/app_localizations.dart';
+import '../../models/app_user.dart';
 import '../../models/chore.dart';
 import '../../providers/chore_provider.dart';
 import '../../services/auth_service.dart';
+import '../../services/chore_service.dart';
 
 class CompleteChoreScreen extends StatefulWidget {
   const CompleteChoreScreen({super.key, required this.chore});
-
   final Chore chore;
 
   @override
@@ -23,6 +24,35 @@ class _CompleteChoreScreenState extends State<CompleteChoreScreen> {
   XFile? _afterPhoto;
   bool _isSaving = false;
 
+  List<AppUser> _users = [];
+  String? _selectedUserId;   // null until users load; then defaults to current user
+  bool _loadingUsers = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUsers();
+  }
+
+  Future<void> _fetchUsers() async {
+    try {
+      final currentUserId = context.read<AuthService>().currentUserId;
+      final users = await context.read<ChoreService>().fetchUsers();
+      if (mounted) {
+        setState(() {
+          _users = users;
+          // Default to the logged-in user if they exist in the list
+          _selectedUserId = users.any((u) => u.id == currentUserId)
+              ? currentUserId
+              : (users.isNotEmpty ? users.first.id : null);
+          _loadingUsers = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loadingUsers = false);
+    }
+  }
+
   @override
   void dispose() {
     _notesController.dispose();
@@ -32,13 +62,7 @@ class _CompleteChoreScreenState extends State<CompleteChoreScreen> {
   Future<void> _pickImage(bool isBefore) async {
     final image = await _picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
-      setState(() {
-        if (isBefore) {
-          _beforePhoto = image;
-        } else {
-          _afterPhoto = image;
-        }
-      });
+      setState(() => isBefore ? _beforePhoto = image : _afterPhoto = image);
     }
   }
 
@@ -50,6 +74,7 @@ class _CompleteChoreScreenState extends State<CompleteChoreScreen> {
       await context.read<ChoreProvider>().completeChore(
             widget.chore.id,
             currentUserId,
+            completedBy: _selectedUserId,
             photoBefore: _beforePhoto,
             photoAfter: _afterPhoto,
             notes: _notesController.text,
@@ -57,12 +82,10 @@ class _CompleteChoreScreenState extends State<CompleteChoreScreen> {
       if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.failedToSubmit(e.toString())),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(l10n.failedToSubmit(e.toString())),
+          backgroundColor: Colors.red,
+        ));
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -77,21 +100,44 @@ class _CompleteChoreScreenState extends State<CompleteChoreScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          Text(
-            l10n.markingTaskAsDone,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
+          Text(l10n.markingTaskAsDone,
+              style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 24),
+
+          // Completed-by picker
+          if (_loadingUsers)
+            const LinearProgressIndicator()
+          else
+            DropdownButtonFormField<String>(
+              initialValue: _selectedUserId,
+              decoration: const InputDecoration(
+                labelText: 'Completed by',
+                prefixIcon: Icon(Icons.person),
+              ),
+              items: _users
+                  .map((u) => DropdownMenuItem(
+                        value: u.id,
+                        child: Text(u.displayName),
+                      ))
+                  .toList(),
+              onChanged: (v) => setState(() => _selectedUserId = v),
+            ),
+
+          const SizedBox(height: 16),
           OutlinedButton.icon(
             onPressed: () => _pickImage(true),
             icon: const Icon(Icons.camera_alt),
-            label: Text(_beforePhoto == null ? l10n.attachBeforePhoto : l10n.beforePhotoSelected),
+            label: Text(_beforePhoto == null
+                ? l10n.attachBeforePhoto
+                : l10n.beforePhotoSelected),
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: () => _pickImage(false),
             icon: const Icon(Icons.camera_alt_outlined),
-            label: Text(_afterPhoto == null ? l10n.attachAfterPhoto : l10n.afterPhotoSelected),
+            label: Text(_afterPhoto == null
+                ? l10n.attachAfterPhoto
+                : l10n.afterPhotoSelected),
           ),
           const SizedBox(height: 24),
           TextField(
@@ -108,8 +154,10 @@ class _CompleteChoreScreenState extends State<CompleteChoreScreen> {
               ? const Center(child: CircularProgressIndicator())
               : ElevatedButton(
                   onPressed: _submitLog,
-                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(16)),
-                  child: Text(l10n.submitCompletion, style: const TextStyle(fontSize: 18)),
+                  style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.all(16)),
+                  child: Text(l10n.submitCompletion,
+                      style: const TextStyle(fontSize: 18)),
                 ),
         ],
       ),

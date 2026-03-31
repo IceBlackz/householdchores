@@ -271,4 +271,117 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get languageSpanish => 'Español';
+
+  @override
+  String get houseConfiguration => 'Huis Configuratie';
+
+  @override
+  String get houseName => 'Huis Naam';
+
+  @override
+  String get serverUrl => 'Server URL';
+
+  @override
+  String get homeAssistantWebhook => 'Home Assistant Webhook';
+
+  @override
+  String get testConnection => 'Verbinding Testen';
+
+  @override
+  String get connectionValid => 'Verbinding geldig!';
+
+  @override
+  String get activeHouse => 'Actief Huis';
+
+  @override
+  String get noActiveHouse => 'Geen actief huis';
+
+  @override
+  String get addNewHouse => 'Nieuw Huis Toevoegen';
+
+  @override
+  String get houseAdded => 'Huis toegevoegd!';
+
+  @override
+  String get houseUpdated => 'Huis bijgewerkt!';
+
+  @override
+  String get houseDeleted => 'Huis verwijderd.';
+
+  @override
+  String get deleteHouse => 'Huis Verwijderen';
+
+  @override
+  String deleteHouseConfirm(Object name) {
+    return 'Verwijder \"$name\"? Dit kan niet ongedaan worden gemaakt.';
+  }
+
+  @override
+  String deleteHouseFailed(Object error) {
+    return 'Verwijderen van huis mislukt: $error';
+  }
+
+  @override
+  String saveFailed(Object error) {
+    return 'Opslaan mislukt: $error';
+  }
+
+  @override
+  String get edit => 'Bewerken';
+
+  @override
+  String get enterHouseNameHint => 'bijv. Thuis, Kantoor, Oma\'s';
+
+  @override
+  String get enterServerUrlHint => 'bijv. http://127.0.0.1:9010';
+
+  @override
+  String get enterHaWebhookUrlHint => 'Optionele Home Assistant webhook URL';
+
+  @override
+  String get invalidUrlError => 'Voer een geldige URL in';
+
+  @override
+  String get requiredField => 'Dit veld is verplicht';
+
+  @override
+  String get haSettingsDescription =>
+      'Configureer Home Assistant webhook URLs voor elk huis. Dit is optioneel en alleen nodig als je chore notificaties in Home Assistant wilt ontvangen.';
+
+  @override
+  String get activeHouseHaWebhook => 'Actief Huis Webhook';
+
+  @override
+  String get haWebhookDescription =>
+      'Webhook URL voor Home Assistant notificaties';
+
+  @override
+  String get haWebhookNote =>
+      'Opmerking: Webhook URLs worden lokaal opgeslagen en niet gesynchroniseerd tussen apparaten.';
+
+  @override
+  String get seasonFilter => 'Seizoen Filter';
+
+  @override
+  String get allSeasons => 'Alle Seizoenen';
+
+  @override
+  String get seasonFilterAll => 'Alle';
+
+  @override
+  String get seasonFilterSpring => 'Lente';
+
+  @override
+  String get seasonFilterSummer => 'Zomer';
+
+  @override
+  String get seasonFilterAutumn => 'Herfst';
+
+  @override
+  String get seasonFilterWinter => 'Winter';
+
+  @override
+  String pastDeadline(int days) {
+    return '!! ${days}d na max';
+  }
 }

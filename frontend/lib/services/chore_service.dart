@@ -5,16 +5,10 @@ import '../constants/app_constants.dart';
 import '../models/app_user.dart';
 import '../models/chore.dart';
 import '../models/chore_log.dart';
-import 'pocketbase_service.dart';
 
 class ChoreService {
-  ChoreService() : _pb = PocketBaseService().client;
-
   final PocketBase _pb;
-
-  // ---------------------------------------------------------------------------
-  // Chores
-  // ---------------------------------------------------------------------------
+  ChoreService(this._pb);
 
   Future<List<Chore>> fetchChores() async {
     final records = await _pb.collection(Collections.chores).getFullList(
@@ -35,22 +29,13 @@ class ChoreService {
     await _pb.collection(Collections.chores).delete(id);
   }
 
-  // ---------------------------------------------------------------------------
-  // Chore Logs
-  // ---------------------------------------------------------------------------
-
-  /// Returns the most recent log per chore for all [choreIds] in a single query.
-  /// This avoids an N+1 pattern on the dashboard — one HTTP request instead of one per chore.
   Future<Map<String, ChoreLog>> fetchLatestLogPerChore(List<String> choreIds) async {
     if (choreIds.isEmpty) return {};
-
     final filter = choreIds.map((id) => 'chore="$id"').join('||');
     final records = await _pb.collection(Collections.choreLogs).getFullList(
       filter: filter,
       sort: '-created',
     );
-
-    // Records are sorted newest-first; putIfAbsent keeps only the first (latest) per chore.
     final Map<String, ChoreLog> result = {};
     for (final record in records) {
       final choreId = record.getStringValue('chore');
@@ -59,7 +44,6 @@ class ChoreService {
     return result;
   }
 
-  /// Returns all logs for [choreId] for the history screen, newest first.
   Future<List<ChoreLog>> fetchLogs(String choreId) async {
     final records = await _pb.collection(Collections.choreLogs).getFullList(
       filter: 'chore="$choreId"',
@@ -69,16 +53,18 @@ class ChoreService {
     return records.map(ChoreLog.fromRecord).toList();
   }
 
-  /// Creates a completion log and atomically clears any one-time assignee override.
+  /// Creates a completion log. [completedBy] defaults to the logged-in user
+  /// but can be overridden to mark a chore done on behalf of someone else.
   Future<void> completeChore(
     String choreId, {
+    String? completedBy,
     XFile? photoBefore,
     XFile? photoAfter,
     String notes = '',
   }) async {
     final body = <String, dynamic>{
       'chore': choreId,
-      'completed_by': _pb.authStore.record?.id,
+      'completed_by': completedBy ?? _pb.authStore.record?.id,
       'notes': notes,
     };
 
@@ -93,14 +79,8 @@ class ChoreService {
     }
 
     await _pb.collection(Collections.choreLogs).create(body: body, files: files);
-
-    // Clear one-time override so next cycle reverts to the default assignee
     await _pb.collection(Collections.chores).update(choreId, body: {'onetimeonly_assignee': ''});
   }
-
-  // ---------------------------------------------------------------------------
-  // Users
-  // ---------------------------------------------------------------------------
 
   Future<List<AppUser>> fetchUsers() async {
     final records = await _pb.collection(Collections.users).getFullList(sort: 'name');

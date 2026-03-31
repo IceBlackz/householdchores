@@ -4,6 +4,7 @@ import '../../constants/app_constants.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/chore.dart';
 import '../../providers/chore_provider.dart';
+import '../../providers/house_provider.dart';
 import '../../providers/locale_provider.dart';
 import '../../services/auth_service.dart';
 import '../add_chore/add_chore_screen.dart';
@@ -69,21 +70,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
       try {
         await context.read<ChoreProvider>().deleteChore(chore.id, currentUserId);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(AppLocalizations.of(context)!.choreDeleted),
-              backgroundColor: Colors.orange,
-            ),
-          );
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(AppLocalizations.of(context)!.choreDeleted),
+            backgroundColor: Colors.orange,
+          ));
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(AppLocalizations.of(context)!.failedToDelete(e.toString())),
-              backgroundColor: Colors.red,
-            ),
-          );
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(AppLocalizations.of(context)!.failedToDelete(e.toString())),
+            backgroundColor: Colors.red,
+          ));
         }
       }
     }
@@ -133,6 +130,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final provider = context.watch<ChoreProvider>();
+    final houseProvider = context.watch<HouseProvider>();
     final currentUserId = context.read<AuthService>().currentUserId ?? '';
     final chores = provider.chores;
     final activeFilter = provider.seasonFilter;
@@ -141,6 +139,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         title: Text(l10n.householdChores),
         actions: [
+          PopupMenuButton<String>(
+            onSelected: (houseId) async {
+              await context.read<HouseProvider>().switchHouse(houseId);
+            },
+            itemBuilder: (context) => houseProvider.houses.map((house) {
+              return PopupMenuItem(
+                value: house.id,
+                child: Row(
+                  children: [
+                    Icon(Icons.home,
+                        color: house.id == houseProvider.activeHouseId
+                            ? Colors.teal
+                            : Colors.grey),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(house.name)),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
           IconButton(
             icon: const Icon(Icons.language),
             onPressed: _showLanguagePicker,
@@ -178,9 +196,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(provider.error!, style: const TextStyle(color: Colors.red)),
+                      Text(provider.error!,
+                          style: const TextStyle(color: Colors.red)),
                       const SizedBox(height: 16),
-                      ElevatedButton(onPressed: _refresh, child: Text(l10n.retry)),
+                      ElevatedButton(
+                          onPressed: _refresh, child: Text(l10n.retry)),
                     ],
                   ),
                 )
@@ -192,30 +212,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         itemCount: chores.length,
                         itemBuilder: (context, index) {
                           final chore = chores[index];
-                          final due = provider.dueDate(chore.id) ?? DateTime.now();
+                          final due =
+                              provider.dueDate(chore.id) ?? DateTime.now();
+                          // FIX: pass the hard deadline so the tile can show critical state
+                          final maxDue =
+                              provider.maxDueDate(chore.id) ?? DateTime.now();
                           return ChoreListTile(
                             chore: chore,
                             dueDate: due,
+                            maxDueDate: maxDue,
                             currentUserId: currentUserId,
                             onTap: () async {
                               final messenger = ScaffoldMessenger.of(context);
-                              final taskCompletedMsg = AppLocalizations.of(context)!.taskCompleted;
-                              final result = await Navigator.of(context).push<bool>(
+                              final taskCompletedMsg =
+                                  AppLocalizations.of(context)!.taskCompleted;
+                              final result =
+                                  await Navigator.of(context).push<bool>(
                                 MaterialPageRoute(
-                                  builder: (_) => CompleteChoreScreen(chore: chore),
+                                  builder: (_) =>
+                                      CompleteChoreScreen(chore: chore),
                                 ),
                               );
                               if (result == true && mounted) {
-                                messenger.showSnackBar(
-                                  SnackBar(
-                                    content: Text(taskCompletedMsg),
-                                    backgroundColor: Colors.green,
-                                  ),
-                                );
+                                messenger.showSnackBar(SnackBar(
+                                  content: Text(taskCompletedMsg),
+                                  backgroundColor: Colors.green,
+                                ));
                               }
                             },
                             onEdit: () async {
-                              final result = await Navigator.of(context).push<bool>(
+                              final result =
+                                  await Navigator.of(context).push<bool>(
                                 MaterialPageRoute(
                                   builder: (_) => AddChoreScreen(chore: chore),
                                 ),
@@ -225,7 +252,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             onDelete: () => _confirmDelete(chore),
                             onHistory: () => Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (_) => ChoreHistoryScreen(chore: chore),
+                                builder: (_) =>
+                                    ChoreHistoryScreen(chore: chore),
                               ),
                             ),
                           );
@@ -277,8 +305,19 @@ class _SeasonFilterBar extends StatelessWidget {
   final String? activeFilter;
   final ValueChanged<String?> onFilterChanged;
 
+  String _label(AppLocalizations l10n, String season) {
+    switch (season) {
+      case 'Spring': return l10n.spring;
+      case 'Summer': return l10n.summer;
+      case 'Autumn': return l10n.autumn;
+      case 'Winter': return l10n.winter;
+      default:       return l10n.allSeasons;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SizedBox(
       height: 48,
       child: ListView(
@@ -288,25 +327,23 @@ class _SeasonFilterBar extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: FilterChip(
-              label: const Text('All'),
+              label: Text(l10n.allSeasons),
               selected: activeFilter == null,
               onSelected: (_) => onFilterChanged(null),
             ),
           ),
           ...AppConstants.seasons
               .where((s) => s != 'All')
-              .map(
-                (season) => Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: FilterChip(
-                    label: Text(season),
-                    selected: activeFilter == season,
-                    onSelected: (_) => onFilterChanged(
-                      activeFilter == season ? null : season,
+              .map((season) => Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilterChip(
+                      label: Text(_label(l10n, season)),
+                      selected: activeFilter == season,
+                      onSelected: (_) => onFilterChanged(
+                        activeFilter == season ? null : season,
+                      ),
                     ),
-                  ),
-                ),
-              ),
+                  )),
         ],
       ),
     );

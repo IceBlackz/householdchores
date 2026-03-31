@@ -13,11 +13,11 @@ class ChoreProvider extends ChangeNotifier {
 
   List<Chore> _chores = [];
   Map<String, DateTime> _dueDates = {};
+  Map<String, DateTime> _maxDueDates = {};
   bool _isLoading = false;
   String? _error;
   String? _seasonFilter;
 
-  // Realtime subscription handles — kept so we can unsubscribe on dispose
   UnsubscribeFunc? _unsubscribeChores;
   UnsubscribeFunc? _unsubscribeLogs;
   String? _currentUserId;
@@ -26,27 +26,19 @@ class ChoreProvider extends ChangeNotifier {
   String? get error => _error;
   String? get seasonFilter => _seasonFilter;
 
-  /// Sorted, filtered chores ready for display.
   List<Chore> get chores {
     if (_seasonFilter == null) return _chores;
-    return _chores.where((c) {
-      // Chores assigned to 'All' seasons always appear regardless of filter
-      return c.season == 'All' || c.season == _seasonFilter;
-    }).toList();
+    return _chores.where((c) => c.season == 'All' || c.season == _seasonFilter).toList();
   }
 
   DateTime? dueDate(String choreId) => _dueDates[choreId];
-
-  // ---------------------------------------------------------------------------
-  // Season filter
-  // ---------------------------------------------------------------------------
+  DateTime? maxDueDate(String choreId) => _maxDueDates[choreId];
 
   void setSeasonFilter(String? season) {
     _seasonFilter = season;
     notifyListeners();
   }
 
-  /// Returns the current season based on the device's local date.
   static String currentSeason() {
     final month = DateTime.now().month;
     if (month >= 3 && month <= 5) return 'Spring';
@@ -55,29 +47,16 @@ class ChoreProvider extends ChangeNotifier {
     return 'Winter';
   }
 
-  // ---------------------------------------------------------------------------
-  // Realtime
-  // ---------------------------------------------------------------------------
-
-  /// Subscribes to PocketBase SSE for live updates across all household devices.
-  /// Safe to call multiple times — existing subscriptions are cancelled first.
   Future<void> initRealtime(String userId) async {
     _currentUserId = userId;
     await _cancelSubscriptions();
-
     final pb = PocketBaseService().client;
-
-    // Any change to chores or chore_logs triggers a full refresh.
-    // This keeps the logic consistent with the mutation path.
-    _unsubscribeChores = await pb
-        .collection(Collections.chores)
-        .subscribe('*', _onRealtimeEvent);
-    _unsubscribeLogs = await pb
-        .collection(Collections.choreLogs)
-        .subscribe('*', _onRealtimeEvent);
+    _unsubscribeChores = await pb.collection(Collections.chores).subscribe('*', _onRealtimeEvent);
+    _unsubscribeLogs = await pb.collection(Collections.choreLogs).subscribe('*', _onRealtimeEvent);
   }
 
   void _onRealtimeEvent(RecordSubscriptionEvent event) {
+    if (_isLoading) return;
     final userId = _currentUserId;
     if (userId != null) refresh(userId);
   }
@@ -95,10 +74,6 @@ class ChoreProvider extends ChangeNotifier {
     super.dispose();
   }
 
-  // ---------------------------------------------------------------------------
-  // Data loading
-  // ---------------------------------------------------------------------------
-
   Future<void> refresh(String currentUserId) async {
     _currentUserId = currentUserId;
     _isLoading = true;
@@ -108,8 +83,8 @@ class ChoreProvider extends ChangeNotifier {
     try {
       final chores = await _choreService.fetchChores();
       final Map<String, DateTime> dueDates = {};
+      final Map<String, DateTime> maxDueDates = {};
 
-      // Single batched query instead of one request per chore
       final latestLogs = await _choreService.fetchLatestLogPerChore(
         chores.map((c) => c.id).toList(),
       );
@@ -120,25 +95,26 @@ class ChoreProvider extends ChangeNotifier {
         final latestLog = latestLogs[chore.id];
         if (latestLog != null) {
           dueDates[chore.id] = chore.nextDueDate(latestLog.created, activeSeason);
+          maxDueDates[chore.id] = chore.maxDueDate(latestLog.created);
         } else {
-          // Never completed — sort as highly overdue
-          dueDates[chore.id] = DateTime.now()
+          final sentinel = DateTime.now()
               .subtract(Duration(days: AppConstants.neverCompletedSentinelDays));
+          dueDates[chore.id] = sentinel;
+          maxDueDates[chore.id] = sentinel;
         }
       }
 
       chores.sort((a, b) {
         final aIsMine = a.activeAssigneeId == currentUserId;
         final bIsMine = b.activeAssigneeId == currentUserId;
-
         if (aIsMine && !bIsMine) return -1;
         if (!aIsMine && bIsMine) return 1;
-
         return dueDates[a.id]!.compareTo(dueDates[b.id]!);
       });
 
       _chores = chores;
       _dueDates = dueDates;
+      _maxDueDates = maxDueDates;
     } catch (e) {
       _error = 'Failed to load chores: $e';
     } finally {
@@ -147,19 +123,19 @@ class ChoreProvider extends ChangeNotifier {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Mutations
-  // ---------------------------------------------------------------------------
-
+  /// [completedBy] defaults to [currentUserId] but can be any user ID
+  /// when marking a chore done on behalf of someone else.
   Future<void> completeChore(
     String choreId,
     String currentUserId, {
+    String? completedBy,
     XFile? photoBefore,
     XFile? photoAfter,
     String notes = '',
   }) async {
     await _choreService.completeChore(
       choreId,
+      completedBy: completedBy ?? currentUserId,
       photoBefore: photoBefore,
       photoAfter: photoAfter,
       notes: notes,

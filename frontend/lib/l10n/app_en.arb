@@ -1,6 +1,5 @@
-{
+﻿{
   "@@locale": "en",
-
   "appTitle": "Household Chores",
   "login": "Login",
   "logout": "Logout",
@@ -20,10 +19,8 @@
       "error": { "type": "String" }
     }
   },
-
   "householdLogin": "Household Login",
   "householdChores": "Household Chores",
-
   "addNewChore": "Add New Chore",
   "editChore": "Edit Chore",
   "saveChore": "Save Chore",
@@ -62,13 +59,11 @@
     }
   },
   "seasonFieldHint": "0 = use default",
-
   "intervalDays": "Days",
   "intervalWeeks": "Weeks",
   "intervalMonths": "Months",
   "intervalQuarters": "Quarters",
   "intervalYears": "Years",
-
   "completeChore": "Complete: {title}",
   "@completeChore": {
     "placeholders": {
@@ -90,10 +85,8 @@
     }
   },
   "taskCompleted": "Awesome! Task completed.",
-
   "noChoresRelax": "No chores here! Time to relax?",
   "retry": "Retry",
-
   "deleteChore": "Delete Chore",
   "deleteConfirm": "Delete \"{title}\"? This cannot be undone.",
   "@deleteConfirm": {
@@ -110,7 +103,6 @@
       "error": { "type": "String" }
     }
   },
-
   "history": "History: {title}",
   "@history": {
     "placeholders": {
@@ -131,7 +123,6 @@
       "name": { "type": "String" }
     }
   },
-
   "neverCompleted": "Never completed",
   "overdue": "Overdue ({days} days)",
   "@overdue": {
@@ -146,13 +137,50 @@
       "days": { "type": "int" }
     }
   },
-
   "viewHistory": "View history",
   "editChoreTooltip": "Edit chore",
   "deleteChoreTooltip": "Delete chore",
-
   "selectLanguage": "Select Language",
   "languageEnglish": "English",
   "languageDutch": "Nederlands",
-  "languageSpanish": "Español"
+  "languageSpanish": "Español",
+  "houseConfiguration": "House Configuration",
+  "houseName": "House Name",
+  "serverUrl": "Server URL",
+  "homeAssistantWebhook": "Home Assistant Webhook",
+  "testConnection": "Test Connection",
+  "connectionValid": "Connection valid!",
+  "activeHouse": "Active House",
+  "noActiveHouse": "No active house",
+  "addNewHouse": "Add New House",
+  "houseAdded": "House added!",
+  "houseUpdated": "House updated!",
+  "houseDeleted": "House deleted.",
+  "deleteHouse": "Delete House",
+  "deleteHouseConfirm": "Delete \"{name}\"? This cannot be undone.",
+  "deleteHouseFailed": "Failed to delete house: {error}",
+  "saveFailed": "Failed to save: {error}",
+  "edit": "Edit",
+  "enterHouseNameHint": "e.g. Home, Office, Grandma's",
+  "enterServerUrlHint": "e.g. http://127.0.0.1:9010",
+  "enterHaWebhookUrlHint": "Optional Home Assistant webhook URL",
+  "invalidUrlError": "Please enter a valid URL",
+  "requiredField": "This field is required",
+  "haSettingsDescription": "Configure Home Assistant webhook URLs for each house. This is optional and only needed if you want to receive chore notifications in Home Assistant.",
+  "activeHouseHaWebhook": "Active House Webhook",
+  "haWebhookDescription": "Webhook URL for Home Assistant notifications",
+  "haWebhookNote": "Note: Webhook URLs are stored locally and not synced across devices.",
+  "seasonFilter": "Season Filter",
+  "allSeasons": "All Seasons",
+  "seasonFilterAll": "All",
+  "seasonFilterSpring": "Spring",
+  "seasonFilterSummer": "Summer",
+  "seasonFilterAutumn": "Autumn",
+  "seasonFilterWinter": "Winter",
+  "pastDeadline": "!! {days}d past max",
+  "@pastDeadline": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  }
 }
