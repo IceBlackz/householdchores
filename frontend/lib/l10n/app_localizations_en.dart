@@ -384,4 +384,102 @@ class AppLocalizationsEn extends AppLocalizations {
   String pastDeadline(int days) {
     return '!! ${days}d past max';
   }
+
+  @override
+  String get appVersionLabel => 'App v';
+
+  @override
+  String get versionWarningTitle => 'Version Warning';
+
+  @override
+  String get versionEndpointNotFound =>
+      'This server does not report its version. It may be outdated. Continue anyway?';
+
+  @override
+  String get versionCheckFailed =>
+      'Could not verify server version. Continue anyway?';
+
+  @override
+  String get continueAnyway => 'Continue anyway';
+
+  @override
+  String get appTooOld => 'App needs updating';
+
+  @override
+  String appTooOldDetail(String appVersion, String serverVersion) {
+    return 'Your app (v$appVersion) is too old for this server (v$serverVersion). Please update the app.';
+  }
+
+  @override
+  String get serverTooOld => 'Server needs updating';
+
+  @override
+  String serverTooOldDetail(String serverVersion, String appVersion) {
+    return 'Your server (v$serverVersion) is too old for this app (v$appVersion). Please update the server.';
+  }
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get manageUsers => 'Manage Users';
+
+  @override
+  String get addUser => 'Add User';
+
+  @override
+  String get editUser => 'Edit User';
+
+  @override
+  String get deleteUser => 'Delete User';
+
+  @override
+  String deleteUserConfirm(String name) {
+    return 'Delete $name? This cannot be undone.';
+  }
+
+  @override
+  String get userDeleted => 'User deleted.';
+
+  @override
+  String get userAdded => 'User added!';
+
+  @override
+  String get userUpdated => 'User updated!';
+
+  @override
+  String get adminBadge => 'Admin';
+
+  @override
+  String get adminBadgeSubtitle => 'Can manage users and settings';
+
+  @override
+  String get userName => 'Name';
+
+  @override
+  String get newPassword => 'New Password';
+
+  @override
+  String get passwordConfirm => 'Confirm Password';
+
+  @override
+  String get changePassword => 'Change password';
+
+  @override
+  String get passwordsDoNotMatch => 'Passwords do not match';
+
+  @override
+  String get passwordTooShort => 'Password must be at least 8 characters';
+
+  @override
+  String get cannotDeleteSelf => 'You cannot delete your own account';
+
+  @override
+  String get noUsersFound => 'No users found';
+
+  @override
+  String get youLabel => 'you';
+
+  @override
+  String get completedBy => 'Completed by';
 }

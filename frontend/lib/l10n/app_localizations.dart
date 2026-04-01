@@ -771,6 +771,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'!! {days}d past max'**
   String pastDeadline(int days);
+
+  /// No description provided for @appVersionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'App v'**
+  String get appVersionLabel;
+
+  /// No description provided for @versionWarningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Version Warning'**
+  String get versionWarningTitle;
+
+  /// No description provided for @versionEndpointNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This server does not report its version. It may be outdated. Continue anyway?'**
+  String get versionEndpointNotFound;
+
+  /// No description provided for @versionCheckFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not verify server version. Continue anyway?'**
+  String get versionCheckFailed;
+
+  /// No description provided for @continueAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue anyway'**
+  String get continueAnyway;
+
+  /// No description provided for @appTooOld.
+  ///
+  /// In en, this message translates to:
+  /// **'App needs updating'**
+  String get appTooOld;
+
+  /// No description provided for @appTooOldDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Your app (v{appVersion}) is too old for this server (v{serverVersion}). Please update the app.'**
+  String appTooOldDetail(String appVersion, String serverVersion);
+
+  /// No description provided for @serverTooOld.
+  ///
+  /// In en, this message translates to:
+  /// **'Server needs updating'**
+  String get serverTooOld;
+
+  /// No description provided for @serverTooOldDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Your server (v{serverVersion}) is too old for this app (v{appVersion}). Please update the server.'**
+  String serverTooOldDetail(String serverVersion, String appVersion);
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @manageUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Users'**
+  String get manageUsers;
+
+  /// No description provided for @addUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Add User'**
+  String get addUser;
+
+  /// No description provided for @editUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit User'**
+  String get editUser;
+
+  /// No description provided for @deleteUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete User'**
+  String get deleteUser;
+
+  /// No description provided for @deleteUserConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {name}? This cannot be undone.'**
+  String deleteUserConfirm(String name);
+
+  /// No description provided for @userDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'User deleted.'**
+  String get userDeleted;
+
+  /// No description provided for @userAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'User added!'**
+  String get userAdded;
+
+  /// No description provided for @userUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'User updated!'**
+  String get userUpdated;
+
+  /// No description provided for @adminBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get adminBadge;
+
+  /// No description provided for @adminBadgeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Can manage users and settings'**
+  String get adminBadgeSubtitle;
+
+  /// No description provided for @userName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get userName;
+
+  /// No description provided for @newPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New Password'**
+  String get newPassword;
+
+  /// No description provided for @passwordConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Password'**
+  String get passwordConfirm;
+
+  /// No description provided for @changePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get changePassword;
+
+  /// No description provided for @passwordsDoNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get passwordsDoNotMatch;
+
+  /// No description provided for @passwordTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 8 characters'**
+  String get passwordTooShort;
+
+  /// No description provided for @cannotDeleteSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'You cannot delete your own account'**
+  String get cannotDeleteSelf;
+
+  /// No description provided for @noUsersFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No users found'**
+  String get noUsersFound;
+
+  /// No description provided for @youLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'you'**
+  String get youLabel;
+
+  /// No description provided for @completedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed by'**
+  String get completedBy;
 }
 
 class _AppLocalizationsDelegate

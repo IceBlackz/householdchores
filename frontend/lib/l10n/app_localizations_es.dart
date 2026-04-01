@@ -385,4 +385,103 @@ class AppLocalizationsEs extends AppLocalizations {
   String pastDeadline(int days) {
     return '!! ${days}d pasado max';
   }
+
+  @override
+  String get appVersionLabel => 'App v';
+
+  @override
+  String get versionWarningTitle => 'Advertencia de version';
+
+  @override
+  String get versionEndpointNotFound =>
+      'Este servidor no informa su version. Puede estar desactualizado. Continuar de todas formas?';
+
+  @override
+  String get versionCheckFailed =>
+      'No se pudo verificar la version del servidor. Continuar de todas formas?';
+
+  @override
+  String get continueAnyway => 'Continuar de todas formas';
+
+  @override
+  String get appTooOld => 'La app necesita actualizarse';
+
+  @override
+  String appTooOldDetail(String appVersion, String serverVersion) {
+    return 'Tu app (v$appVersion) es demasiado antigua para este servidor (v$serverVersion). Por favor actualiza la app.';
+  }
+
+  @override
+  String get serverTooOld => 'El servidor necesita actualizarse';
+
+  @override
+  String serverTooOldDetail(String serverVersion, String appVersion) {
+    return 'Tu servidor (v$serverVersion) es demasiado antiguo para esta app (v$appVersion). Por favor actualiza el servidor.';
+  }
+
+  @override
+  String get save => 'Guardar';
+
+  @override
+  String get manageUsers => 'Gestionar Usuarios';
+
+  @override
+  String get addUser => 'Anadir Usuario';
+
+  @override
+  String get editUser => 'Editar Usuario';
+
+  @override
+  String get deleteUser => 'Eliminar Usuario';
+
+  @override
+  String deleteUserConfirm(String name) {
+    return 'Eliminar a $name? No se puede deshacer.';
+  }
+
+  @override
+  String get userDeleted => 'Usuario eliminado.';
+
+  @override
+  String get userAdded => 'Usuario anadido!';
+
+  @override
+  String get userUpdated => 'Usuario actualizado!';
+
+  @override
+  String get adminBadge => 'Admin';
+
+  @override
+  String get adminBadgeSubtitle => 'Puede gestionar usuarios y configuracion';
+
+  @override
+  String get userName => 'Nombre';
+
+  @override
+  String get newPassword => 'Nueva Contrasena';
+
+  @override
+  String get passwordConfirm => 'Confirmar Contrasena';
+
+  @override
+  String get changePassword => 'Cambiar contrasena';
+
+  @override
+  String get passwordsDoNotMatch => 'Las contrasenas no coinciden';
+
+  @override
+  String get passwordTooShort =>
+      'La contrasena debe tener al menos 8 caracteres';
+
+  @override
+  String get cannotDeleteSelf => 'No puedes eliminar tu propia cuenta';
+
+  @override
+  String get noUsersFound => 'No se encontraron usuarios';
+
+  @override
+  String get youLabel => 'tu';
+
+  @override
+  String get completedBy => 'Completado por';
 }

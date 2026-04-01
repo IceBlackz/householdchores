@@ -182,5 +182,50 @@
     "placeholders": {
       "days": { "type": "int" }
     }
-  }
+  },
+  "appVersionLabel": "App v",
+  "versionWarningTitle": "Versiewaarschuwing",
+  "versionEndpointNotFound": "Deze server rapporteert zijn versie niet. Mogelijk is hij verouderd. Toch doorgaan?",
+  "versionCheckFailed": "Serverversie kon niet worden geverifieerd. Toch doorgaan?",
+  "continueAnyway": "Toch doorgaan",
+  "appTooOld": "App moet worden bijgewerkt",
+  "appTooOldDetail": "Jouw app (v{appVersion}) is te oud voor deze server (v{serverVersion}). Werk de app bij.",
+  "@appTooOldDetail": {
+    "placeholders": {
+      "appVersion": { "type": "String" },
+      "serverVersion": { "type": "String" }
+    }
+  },
+  "serverTooOld": "Server moet worden bijgewerkt",
+  "serverTooOldDetail": "Jouw server (v{serverVersion}) is te oud voor deze app (v{appVersion}). Werk de server bij.",
+  "@serverTooOldDetail": {
+    "placeholders": {
+      "serverVersion": { "type": "String" },
+      "appVersion": { "type": "String" }
+    }
+  },
+  "save": "Opslaan",
+  "manageUsers": "Gebruikers Beheren",
+  "addUser": "Gebruiker Toevoegen",
+  "editUser": "Gebruiker Bewerken",
+  "deleteUser": "Gebruiker Verwijderen",
+  "deleteUserConfirm": "Verwijder {name}? Dit kan niet ongedaan worden gemaakt.",
+  "@deleteUserConfirm": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "userDeleted": "Gebruiker verwijderd.",
+  "userAdded": "Gebruiker toegevoegd!",
+  "userUpdated": "Gebruiker bijgewerkt!",
+  "adminBadge": "Beheerder",
+  "adminBadgeSubtitle": "Kan gebruikers en instellingen beheren",
+  "userName": "Naam",
+  "newPassword": "Nieuw Wachtwoord",
+  "passwordConfirm": "Wachtwoord Bevestigen",
+  "changePassword": "Wachtwoord wijzigen",
+  "passwordsDoNotMatch": "Wachtwoorden komen niet overeen",
+  "passwordTooShort": "Wachtwoord moet minimaal 8 tekens hebben",
+  "cannotDeleteSelf": "Je kunt je eigen account niet verwijderen",
+  "noUsersFound": "Geen gebruikers gevonden",
+  "youLabel": "jij",
+  "completedBy": "Voltooid door"
 }

@@ -8,6 +8,7 @@ import '../../providers/house_provider.dart';
 import '../../providers/locale_provider.dart';
 import '../../services/auth_service.dart';
 import '../add_chore/add_chore_screen.dart';
+import '../admin/user_management_screen.dart';
 import '../complete_chore/complete_chore_screen.dart';
 import '../history/chore_history_screen.dart';
 import '../login/login_screen.dart';
@@ -98,28 +99,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
             label: l10n.languageEnglish,
             locale: const Locale('en'),
             current: localeProvider.locale,
-            onTap: (locale) {
-              localeProvider.setLocale(locale);
-              Navigator.of(ctx).pop();
-            },
+            onTap: (locale) { localeProvider.setLocale(locale); Navigator.of(ctx).pop(); },
           ),
           _LanguageTile(
             label: l10n.languageDutch,
             locale: const Locale('nl'),
             current: localeProvider.locale,
-            onTap: (locale) {
-              localeProvider.setLocale(locale);
-              Navigator.of(ctx).pop();
-            },
+            onTap: (locale) { localeProvider.setLocale(locale); Navigator.of(ctx).pop(); },
           ),
           _LanguageTile(
             label: l10n.languageSpanish,
             locale: const Locale('es'),
             current: localeProvider.locale,
-            onTap: (locale) {
-              localeProvider.setLocale(locale);
-              Navigator.of(ctx).pop();
-            },
+            onTap: (locale) { localeProvider.setLocale(locale); Navigator.of(ctx).pop(); },
           ),
         ],
       ),
@@ -131,7 +123,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final l10n = AppLocalizations.of(context)!;
     final provider = context.watch<ChoreProvider>();
     final houseProvider = context.watch<HouseProvider>();
-    final currentUserId = context.read<AuthService>().currentUserId ?? '';
+    final authService = context.read<AuthService>();
+    final currentUserId = authService.currentUserId ?? '';
     final chores = provider.chores;
     final activeFilter = provider.seasonFilter;
 
@@ -139,26 +132,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         title: Text(l10n.householdChores),
         actions: [
+          // House switcher
           PopupMenuButton<String>(
             onSelected: (houseId) async {
               await context.read<HouseProvider>().switchHouse(houseId);
             },
-            itemBuilder: (context) => houseProvider.houses.map((house) {
-              return PopupMenuItem(
+            itemBuilder: (_) => houseProvider.houses.map((house) =>
+              PopupMenuItem(
                 value: house.id,
-                child: Row(
-                  children: [
-                    Icon(Icons.home,
-                        color: house.id == houseProvider.activeHouseId
-                            ? Colors.teal
-                            : Colors.grey),
-                    const SizedBox(width: 8),
-                    Expanded(child: Text(house.name)),
-                  ],
-                ),
-              );
-            }).toList(),
+                child: Row(children: [
+                  Icon(Icons.home,
+                    color: house.id == houseProvider.activeHouseId
+                        ? Colors.teal : Colors.grey),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(house.name)),
+                ]),
+              ),
+            ).toList(),
           ),
+          // Admin-only: user management
+          if (authService.isCurrentUserAdmin)
+            IconButton(
+              icon: const Icon(Icons.manage_accounts),
+              tooltip: l10n.manageUsers,
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const UserManagementScreen()),
+              ),
+            ),
           IconButton(
             icon: const Icon(Icons.language),
             onPressed: _showLanguagePicker,
@@ -214,7 +214,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           final chore = chores[index];
                           final due =
                               provider.dueDate(chore.id) ?? DateTime.now();
-                          // FIX: pass the hard deadline so the tile can show critical state
                           final maxDue =
                               provider.maxDueDate(chore.id) ?? DateTime.now();
                           return ChoreListTile(
@@ -224,8 +223,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             currentUserId: currentUserId,
                             onTap: () async {
                               final messenger = ScaffoldMessenger.of(context);
-                              final taskCompletedMsg =
-                                  AppLocalizations.of(context)!.taskCompleted;
+                              final msg = AppLocalizations.of(context)!
+                                  .taskCompleted;
                               final result =
                                   await Navigator.of(context).push<bool>(
                                 MaterialPageRoute(
@@ -235,7 +234,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               );
                               if (result == true && mounted) {
                                 messenger.showSnackBar(SnackBar(
-                                  content: Text(taskCompletedMsg),
+                                  content: Text(msg),
                                   backgroundColor: Colors.green,
                                 ));
                               }
@@ -263,6 +262,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 }
+
+// ---------------------------------------------------------------------------
 
 class _LanguageTile extends StatelessWidget {
   const _LanguageTile({
@@ -295,6 +296,8 @@ class _LanguageTile extends StatelessWidget {
     );
   }
 }
+
+// ---------------------------------------------------------------------------
 
 class _SeasonFilterBar extends StatelessWidget {
   const _SeasonFilterBar({

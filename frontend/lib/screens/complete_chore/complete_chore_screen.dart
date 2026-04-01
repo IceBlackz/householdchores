@@ -25,7 +25,7 @@ class _CompleteChoreScreenState extends State<CompleteChoreScreen> {
   bool _isSaving = false;
 
   List<AppUser> _users = [];
-  String? _selectedUserId;   // null until users load; then defaults to current user
+  String? _selectedUserId;
   bool _loadingUsers = true;
 
   @override
@@ -41,7 +41,7 @@ class _CompleteChoreScreenState extends State<CompleteChoreScreen> {
       if (mounted) {
         setState(() {
           _users = users;
-          // Default to the logged-in user if they exist in the list
+          // Default to the logged-in user
           _selectedUserId = users.any((u) => u.id == currentUserId)
               ? currentUserId
               : (users.isNotEmpty ? users.first.id : null);
@@ -104,15 +104,16 @@ class _CompleteChoreScreenState extends State<CompleteChoreScreen> {
               style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 24),
 
-          // Completed-by picker
+          // Completed-by picker — defaults to logged-in user
           if (_loadingUsers)
             const LinearProgressIndicator()
           else
             DropdownButtonFormField<String>(
               initialValue: _selectedUserId,
-              decoration: const InputDecoration(
-                labelText: 'Completed by',
-                prefixIcon: Icon(Icons.person),
+              decoration: InputDecoration(
+                labelText: l10n.completedBy,
+                prefixIcon: const Icon(Icons.person),
+                border: const OutlineInputBorder(),
               ),
               items: _users
                   .map((u) => DropdownMenuItem(

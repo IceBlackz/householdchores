@@ -1,2 +1,5 @@
 pb_data/
 .env
+# web/ was previously committed as a placeholder but is now built
+# inside Docker by Dockerfile.web — no longer needed on disk
+web/

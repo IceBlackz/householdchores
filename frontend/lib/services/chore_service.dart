@@ -10,6 +10,10 @@ class ChoreService {
   final PocketBase _pb;
   ChoreService(this._pb);
 
+  // --------------------------------------------------------------------------
+  // Chores
+  // --------------------------------------------------------------------------
+
   Future<List<Chore>> fetchChores() async {
     final records = await _pb.collection(Collections.chores).getFullList(
       expand: 'default_assignee,onetimeonly_assignee',
@@ -29,7 +33,12 @@ class ChoreService {
     await _pb.collection(Collections.chores).delete(id);
   }
 
-  Future<Map<String, ChoreLog>> fetchLatestLogPerChore(List<String> choreIds) async {
+  // --------------------------------------------------------------------------
+  // Chore Logs
+  // --------------------------------------------------------------------------
+
+  Future<Map<String, ChoreLog>> fetchLatestLogPerChore(
+      List<String> choreIds) async {
     if (choreIds.isEmpty) return {};
     final filter = choreIds.map((id) => 'chore="$id"').join('||');
     final records = await _pb.collection(Collections.choreLogs).getFullList(
@@ -53,8 +62,8 @@ class ChoreService {
     return records.map(ChoreLog.fromRecord).toList();
   }
 
-  /// Creates a completion log. [completedBy] defaults to the logged-in user
-  /// but can be overridden to mark a chore done on behalf of someone else.
+  /// [completedBy] defaults to the logged-in user but can be overridden
+  /// to mark a chore done on behalf of another household member.
   Future<void> completeChore(
     String choreId, {
     String? completedBy,
@@ -63,27 +72,75 @@ class ChoreService {
     String notes = '',
   }) async {
     final body = <String, dynamic>{
-      'chore': choreId,
+      'chore':        choreId,
       'completed_by': completedBy ?? _pb.authStore.record?.id,
-      'notes': notes,
+      'notes':        notes,
     };
 
     final files = <http.MultipartFile>[];
     if (photoBefore != null) {
       final bytes = await photoBefore.readAsBytes();
-      files.add(http.MultipartFile.fromBytes('photo_before', bytes, filename: photoBefore.name));
+      files.add(http.MultipartFile.fromBytes(
+          'photo_before', bytes, filename: photoBefore.name));
     }
     if (photoAfter != null) {
       final bytes = await photoAfter.readAsBytes();
-      files.add(http.MultipartFile.fromBytes('photo_after', bytes, filename: photoAfter.name));
+      files.add(http.MultipartFile.fromBytes(
+          'photo_after', bytes, filename: photoAfter.name));
     }
 
-    await _pb.collection(Collections.choreLogs).create(body: body, files: files);
-    await _pb.collection(Collections.chores).update(choreId, body: {'onetimeonly_assignee': ''});
+    await _pb.collection(Collections.choreLogs).create(
+        body: body, files: files);
+    await _pb.collection(Collections.chores)
+        .update(choreId, body: {'onetimeonly_assignee': ''});
   }
 
+  // --------------------------------------------------------------------------
+  // Users
+  // --------------------------------------------------------------------------
+
   Future<List<AppUser>> fetchUsers() async {
-    final records = await _pb.collection(Collections.users).getFullList(sort: 'name');
+    final records = await _pb
+        .collection(Collections.users)
+        .getFullList(sort: 'name');
     return records.map(AppUser.fromRecord).toList();
+  }
+
+  Future<AppUser> createUser({
+    required String name,
+    required String email,
+    required String password,
+    bool isAdmin = false,
+  }) async {
+    final record = await _pb.collection(Collections.users).create(body: {
+      'name':            name,
+      'email':           email,
+      'password':        password,
+      'passwordConfirm': password,
+      'is_admin':        isAdmin,
+    });
+    return AppUser.fromRecord(record);
+  }
+
+  Future<void> updateUser(
+    String id, {
+    String? name,
+    String? email,
+    bool? isAdmin,
+    String? password,
+  }) async {
+    final body = <String, dynamic>{};
+    if (name != null)    body['name']    = name;
+    if (email != null)   body['email']   = email;
+    if (isAdmin != null) body['is_admin'] = isAdmin;
+    if (password != null && password.isNotEmpty) {
+      body['password']        = password;
+      body['passwordConfirm'] = password;
+    }
+    await _pb.collection(Collections.users).update(id, body: body);
+  }
+
+  Future<void> deleteUser(String id) async {
+    await _pb.collection(Collections.users).delete(id);
   }
 }

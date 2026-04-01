@@ -384,4 +384,102 @@ class AppLocalizationsNl extends AppLocalizations {
   String pastDeadline(int days) {
     return '!! ${days}d na max';
   }
+
+  @override
+  String get appVersionLabel => 'App v';
+
+  @override
+  String get versionWarningTitle => 'Versiewaarschuwing';
+
+  @override
+  String get versionEndpointNotFound =>
+      'Deze server rapporteert zijn versie niet. Mogelijk is hij verouderd. Toch doorgaan?';
+
+  @override
+  String get versionCheckFailed =>
+      'Serverversie kon niet worden geverifieerd. Toch doorgaan?';
+
+  @override
+  String get continueAnyway => 'Toch doorgaan';
+
+  @override
+  String get appTooOld => 'App moet worden bijgewerkt';
+
+  @override
+  String appTooOldDetail(String appVersion, String serverVersion) {
+    return 'Jouw app (v$appVersion) is te oud voor deze server (v$serverVersion). Werk de app bij.';
+  }
+
+  @override
+  String get serverTooOld => 'Server moet worden bijgewerkt';
+
+  @override
+  String serverTooOldDetail(String serverVersion, String appVersion) {
+    return 'Jouw server (v$serverVersion) is te oud voor deze app (v$appVersion). Werk de server bij.';
+  }
+
+  @override
+  String get save => 'Opslaan';
+
+  @override
+  String get manageUsers => 'Gebruikers Beheren';
+
+  @override
+  String get addUser => 'Gebruiker Toevoegen';
+
+  @override
+  String get editUser => 'Gebruiker Bewerken';
+
+  @override
+  String get deleteUser => 'Gebruiker Verwijderen';
+
+  @override
+  String deleteUserConfirm(String name) {
+    return 'Verwijder $name? Dit kan niet ongedaan worden gemaakt.';
+  }
+
+  @override
+  String get userDeleted => 'Gebruiker verwijderd.';
+
+  @override
+  String get userAdded => 'Gebruiker toegevoegd!';
+
+  @override
+  String get userUpdated => 'Gebruiker bijgewerkt!';
+
+  @override
+  String get adminBadge => 'Beheerder';
+
+  @override
+  String get adminBadgeSubtitle => 'Kan gebruikers en instellingen beheren';
+
+  @override
+  String get userName => 'Naam';
+
+  @override
+  String get newPassword => 'Nieuw Wachtwoord';
+
+  @override
+  String get passwordConfirm => 'Wachtwoord Bevestigen';
+
+  @override
+  String get changePassword => 'Wachtwoord wijzigen';
+
+  @override
+  String get passwordsDoNotMatch => 'Wachtwoorden komen niet overeen';
+
+  @override
+  String get passwordTooShort => 'Wachtwoord moet minimaal 8 tekens hebben';
+
+  @override
+  String get cannotDeleteSelf => 'Je kunt je eigen account niet verwijderen';
+
+  @override
+  String get noUsersFound => 'Geen gebruikers gevonden';
+
+  @override
+  String get youLabel => 'jij';
+
+  @override
+  String get completedBy => 'Voltooid door';
 }

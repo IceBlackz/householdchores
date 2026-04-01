@@ -1,13 +1,22 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../config/app_config.dart';
 import '../models/house.dart';
 
+/// Provider for managing multiple PocketBase server configurations (houses).
+/// Handles adding, editing, deleting houses and switching between them.
 class HouseProvider extends ChangeNotifier {
   final List<House> _houses = [];
   String? _activeHouseId;
 
-  static const String defaultLocalHouseUrl = 'http://127.0.0.1:9010';
+  /// Default local house URL.
+  /// On web this returns the same host as the page on port 9010,
+  /// so the app served from :9011 automatically talks to :9010
+  /// without any manual configuration.
+  /// On native it falls back to the BACKEND_URL dart-define or localhost.
+  static String get defaultLocalHouseUrl => AppConfig.backendUrl;
+
   static const String defaultLocalHouseName = 'Local';
 
   HouseProvider() {
@@ -60,7 +69,8 @@ class HouseProvider extends ChangeNotifier {
   String? get activeHouseId => _activeHouseId;
   bool get hasActiveHouse => _activeHouseId != null && _activeHouseId != '';
 
-  /// Adds a new house and returns its generated ID so the caller can switch to it.
+  /// Adds a new house and returns its generated ID so the caller
+  /// can immediately switchHouse(newId).
   Future<String> addHouse({
     required String name,
     required String url,
@@ -74,9 +84,13 @@ class HouseProvider extends ChangeNotifier {
       throw ArgumentError('A house with URL $url already exists');
     }
 
-    // FIX: return the new ID so callers can switchHouse(newId) correctly
     final newId = DateTime.now().millisecondsSinceEpoch.toString();
-    final newHouse = House(id: newId, name: name, url: url, haWebhookUrl: haWebhookUrl);
+    final newHouse = House(
+      id: newId,
+      name: name,
+      url: url,
+      haWebhookUrl: haWebhookUrl,
+    );
 
     _houses.add(newHouse);
     await _saveHouses();
@@ -96,8 +110,11 @@ class HouseProvider extends ChangeNotifier {
 
     if (url != null) {
       final uri = Uri.tryParse(url);
-      if (uri == null || !uri.isAbsolute) throw ArgumentError('Invalid URL: $url');
-      if (url != house.url && _houses.any((h) => h.url == url && h.id != houseId)) {
+      if (uri == null || !uri.isAbsolute) {
+        throw ArgumentError('Invalid URL: $url');
+      }
+      if (url != house.url &&
+          _houses.any((h) => h.url == url && h.id != houseId)) {
         throw ArgumentError('A house with URL $url already exists');
       }
     }
@@ -113,7 +130,9 @@ class HouseProvider extends ChangeNotifier {
   }
 
   Future<void> deleteHouse(String houseId) async {
-    if (_houses.length == 1) throw ArgumentError('Cannot delete the last house');
+    if (_houses.length == 1) {
+      throw ArgumentError('Cannot delete the last house');
+    }
 
     final houseIndex = _houses.indexWhere((h) => h.id == houseId);
     if (houseIndex == -1) throw ArgumentError('House not found: $houseId');

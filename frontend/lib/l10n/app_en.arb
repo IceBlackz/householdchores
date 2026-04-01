@@ -182,5 +182,50 @@
     "placeholders": {
       "days": { "type": "int" }
     }
-  }
+  },
+  "appVersionLabel": "App v",
+  "versionWarningTitle": "Version Warning",
+  "versionEndpointNotFound": "This server does not report its version. It may be outdated. Continue anyway?",
+  "versionCheckFailed": "Could not verify server version. Continue anyway?",
+  "continueAnyway": "Continue anyway",
+  "appTooOld": "App needs updating",
+  "appTooOldDetail": "Your app (v{appVersion}) is too old for this server (v{serverVersion}). Please update the app.",
+  "@appTooOldDetail": {
+    "placeholders": {
+      "appVersion": { "type": "String" },
+      "serverVersion": { "type": "String" }
+    }
+  },
+  "serverTooOld": "Server needs updating",
+  "serverTooOldDetail": "Your server (v{serverVersion}) is too old for this app (v{appVersion}). Please update the server.",
+  "@serverTooOldDetail": {
+    "placeholders": {
+      "serverVersion": { "type": "String" },
+      "appVersion": { "type": "String" }
+    }
+  },
+  "save": "Save",
+  "manageUsers": "Manage Users",
+  "addUser": "Add User",
+  "editUser": "Edit User",
+  "deleteUser": "Delete User",
+  "deleteUserConfirm": "Delete {name}? This cannot be undone.",
+  "@deleteUserConfirm": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "userDeleted": "User deleted.",
+  "userAdded": "User added!",
+  "userUpdated": "User updated!",
+  "adminBadge": "Admin",
+  "adminBadgeSubtitle": "Can manage users and settings",
+  "userName": "Name",
+  "newPassword": "New Password",
+  "passwordConfirm": "Confirm Password",
+  "changePassword": "Change password",
+  "passwordsDoNotMatch": "Passwords do not match",
+  "passwordTooShort": "Password must be at least 8 characters",
+  "cannotDeleteSelf": "You cannot delete your own account",
+  "noUsersFound": "No users found",
+  "youLabel": "you",
+  "completedBy": "Completed by"
 }

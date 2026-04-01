@@ -1,22 +1,25 @@
 # Household Chores Manager
 
+Human input: (Currently broken, intermidiate update. App won't connect to server with "Cannot connect to server" error. Might have to do with the integration of the flutter web folder to the server version, not happy with current implementation.)
 A smart, self-hosted household task manager that eliminates the "whose turn is it?" debate. Runs on your local network — no cloud subscriptions, no data leaving your home.
 
 Built with Flutter (Web/Desktop/Mobile) and PocketBase, designed for small home servers like a Jetson Nano or Raspberry Pi.
 
 ## Features
 
-- **Smart sorting** — tasks assigned to you float to the top; everything else is sorted by how overdue it is
-- **Hard deadlines** — a second "max" interval shows a critical warning when a task is truly past due
-- **Flexible intervals** — set recurrence in days, weeks, months, quarters, or years
-- **Season-specific schedules** — e.g. clean gutters every 3 months in autumn, every 6 months otherwise
-- **Assignments** — assign a default owner per chore; override for a single cycle without changing the default
-- **Complete on behalf of** — mark a chore done for any household member, not just yourself
-- **Multiple houses** — configure multiple PocketBase servers and switch between them at login
+- **Smart sorting** — tasks assigned to you float to the top; everything else sorted by how overdue it is
+- **Hard deadlines** — critical warning when a task passes its maximum interval
+- **Flexible intervals** — days, weeks, months, quarters, or years
+- **Season-specific schedules** — different intervals per season (e.g. gutters every 3 months in autumn)
+- **Assignments** — default owner per chore; one-time override without changing the default
+- **Complete on behalf of** — mark a chore done for any household member
+- **User management** — admin users can add, edit, and delete household members from within the app
+- **Multiple houses** — configure multiple PocketBase servers and switch between them
 - **Photo proof** — attach before/after photos when completing a task
-- **History** — see who completed what and when, with notes and photos
-- **Real-time sync** — completing a chore on one device instantly updates all others on the same network
-- **Multilingual** — English, Dutch (Nederlands), and Spanish (Español); auto-detects from device locale with a manual override
+- **History** — full completion log with notes and photos
+- **Real-time sync** — completing a chore instantly updates all other connected devices
+- **Version compatibility check** — app warns if server and app versions are incompatible
+- **Multilingual** — English, Dutch (Nederlands), Spanish (Español); auto-detects device locale
 
 ---
 
@@ -25,99 +28,57 @@ Built with Flutter (Web/Desktop/Mobile) and PocketBase, designed for small home 
 | Tool | Version | Notes |
 |------|---------|-------|
 | Git | any | To clone and update the repo |
-| Docker Desktop | 4.x+ | Runs the backend |
-| Flutter SDK | 3.29+ | To build and run the frontend |
+| Docker Desktop | 4.x+ | Runs backend + web server |
+| Flutter SDK | 3.29+ | Only needed to build the Android APK |
+
+> **The web app is built inside Docker** — no Flutter installation needed to deploy the server.
 
 ---
 
-## Installation
+## Quick Start
 
-### 1. Clone the repository
+### 1. Clone
 
 ```bash
 git clone <your-repo-url> householdchores
 cd householdchores
 ```
 
-### 2. Configure the backend
+### 2. Configure
 
 ```bash
-cd backend
-cp .env.example .env        # then edit .env with your admin credentials
+cp backend/.env.example backend/.env
 ```
 
-Open `.env` and set:
+Edit `backend/.env`:
 ```
-PB_ADMIN_EMAIL=admin@example.com
-PB_ADMIN_PASSWORD=yourStrongPassword
-```
-
-Optionally, set a Home Assistant webhook URL:
-```
-HA_WEBHOOK_URL=http://your-ha:8123/api/webhook/your-webhook-id
+ADMIN_EMAIL="admin@example.com"
+ADMIN_PASSWORD="yourStrongPassword"
 ```
 
-### 3. Start the backend
+### 3. Start
 
 ```bash
+# From the repo root (where docker-compose.yaml lives)
 docker compose up -d --build
 ```
 
-- Admin UI: http://localhost:9010/_/
-- API: http://localhost:9010/
+First run takes a few minutes — Docker downloads Flutter and compiles the web app. Subsequent starts are fast (cached layers).
 
-> **Migrations run automatically** on startup. You never need to run them manually.
+- **Web app:** http://localhost:9011
+- **API / Admin UI:** http://localhost:9010/_/
 
 ### 4. Add users
 
-Open http://localhost:9010/_/ → Collections → `users` → New record.
-Fill in `name`, `email`, and `password`. Users log in with email + password in the app.
+Open http://localhost:9010/_/ → Collections → `users` → New record. Set `name`, `email`, `password`.
 
-### 5. Run the frontend
-
-```bash
-cd frontend
-flutter pub get
-flutter run -d chrome
-```
-
-The app opens in your browser and connects to `http://localhost:9010` by default.
+Then set at least one user as admin: find your account → set `is_admin = true` → Save. After that, manage all users from within the app itself (⚙ → Manage Users).
 
 ---
 
 ## Accessing from other devices on your network
 
-### Find your server's IP address
-
-**Windows:** run `ipconfig`, look for the IPv4 Address (e.g. `192.168.1.42`).
-
-**Linux / macOS:** run `ip addr` or `ifconfig`.
-
-### Run pointing at your server
-
-```bash
-flutter run -d chrome --dart-define=BACKEND_URL=http://192.168.1.42:9010
-```
-
-### Build a release web app
-
-```bash
-flutter build web --dart-define=BACKEND_URL=http://192.168.1.42:9010
-```
-
-Serve `build/web` from any web server. Easiest option — add to `docker-compose.yaml`:
-
-```yaml
-  web:
-    image: nginx:alpine
-    ports:
-      - "8080:80"
-    volumes:
-      - ../frontend/build/web:/usr/share/nginx/html:ro
-    restart: unless-stopped
-```
-
-Then `docker compose up -d` and open http://192.168.1.42:8080 from any device.
+Find your server's IP (`ipconfig` on Windows, `ip addr` on Linux/macOS), then open `http://192.168.1.x:9011` from any device on the same network. The web app automatically connects to port 9010 on the same host — no configuration needed.
 
 ---
 
@@ -125,163 +86,86 @@ Then `docker compose up -d` and open http://192.168.1.42:8080 from any device.
 
 ### One-time setup
 
-1. **Accept Android licenses:**
-   ```bash
-   flutter doctor --android-licenses
-   ```
-
-2. **Create a signing keystore** (skip if you already have one):
+1. Accept Android licenses: `flutter doctor --android-licenses`
+2. Create a signing keystore:
    ```bash
    keytool -genkey -v -keystore ~/household-key.jks \
-     -keyalg RSA -keysize 2048 -validity 10000 \
-     -alias household
+     -keyalg RSA -keysize 2048 -validity 10000 -alias household
    ```
-   Remember the passwords — you'll need them every build.
-
-3. **Create `frontend/android/key.properties`** (do **not** commit this file):
+3. Create `frontend/android/key.properties` (do **not** commit):
    ```
    storePassword=yourKeystorePassword
    keyPassword=yourKeyPassword
    keyAlias=household
    storeFile=C:/Users/YourName/household-key.jks
    ```
+4. Wire the keystore into `frontend/android/app/build.gradle.kts` (see README for snippet).
 
-4. **Wire the keystore into the build** — edit `frontend/android/app/build.gradle.kts` and add inside the `android { ... }` block:
-   ```kotlin
-   val keyPropertiesFile = rootProject.file("key.properties")
-   val keyProperties = java.util.Properties()
-   keyProperties.load(java.io.FileInputStream(keyPropertiesFile))
+### Build
 
-   signingConfigs {
-       create("release") {
-           keyAlias = keyProperties["keyAlias"] as String
-           keyPassword = keyProperties["keyPassword"] as String
-           storeFile = file(keyProperties["storeFile"] as String)
-           storePassword = keyProperties["storePassword"] as String
-       }
-   }
-   buildTypes {
-       release {
-           signingConfig = signingConfigs.getByName("release")
-       }
-   }
-   ```
-
-### Build the APK
-
-```bash
-cd frontend
-flutter build apk --release --dart-define=BACKEND_URL=http://192.168.1.42:9010
+```powershell
+# From repo root — bumps version, builds APK, tags git, pushes, optional GitHub release
+.\release.ps1 -Version 1.1.0
 ```
 
-Output: `build/app/outputs/flutter-apk/app-release.apk`
+Output APK: `householdchores-v1.1.0.apk`
 
-### Distribute to household members
+### Distribute
 
-The simplest approach — no Play Store needed:
+1. Enable "Install unknown apps" on the Android device
+2. Share the APK via Google Drive, WhatsApp, or a shared network folder
+3. Tap the APK on the device → Install
 
-1. **Enable "Install unknown apps"** on each Android device:
-   Settings → Apps → Special app access → Install unknown apps → enable for your browser or file manager.
+---
 
-2. **Share the APK** via any of:
-   - Copy to a shared network folder and open from the phone's file manager
-   - Upload to Google Drive / Nextcloud and open the share link on the phone
-   - Send via WhatsApp or Signal (avoid email — many clients block APKs)
+## Updating the server
 
-3. **Tap the APK** on the phone and confirm installation.
+```bash
+git pull
+docker compose up -d --build
+```
 
-> **Tip:** Increment `version` in `frontend/pubspec.yaml` (e.g. `1.0.0+1` → `1.1.0+2`) before each build so Android offers an update prompt rather than a full reinstall.
-
-### Update the app on a phone
-
-Rebuild the APK and share it again. Android will show "Update" if the signing key matches and the version number is higher.
+That's it. Migrations apply automatically. The web app is rebuilt automatically. Your data (`backend/pb_data/`) is never touched.
 
 ---
 
 ## Configuring multiple houses
 
-Tap the **⚙ settings icon** on the login screen to open House Configuration. From there you can:
-- Add a new PocketBase server (name + URL + optional Home Assistant webhook)
-- Test the connection before saving
-- Edit or delete existing houses
-- Switch the active house from the login screen dropdown
-
-Each house is a completely independent PocketBase server. Switching houses re-initialises the connection.
-
----
-
-## Updating
-
-```bash
-git pull
-cd backend
-docker compose up -d --build    # picks up new migrations automatically
-cd ../frontend
-flutter pub get                  # only needed if pubspec.yaml changed
-flutter build apk --release --dart-define=BACKEND_URL=http://192.168.1.42:9010
-```
+Tap **⚙** on the login screen → House Configuration. Add a PocketBase server URL, test the connection, save. Switch between houses from the login screen dropdown.
 
 ---
 
 ## Home Assistant Integration
 
-### Option A — REST sensor (read-only, no setup needed)
-
-```yaml
-sensor:
-  - platform: rest
-    name: Overdue Chores
-    resource: "http://192.168.1.42:9010/api/collections/chore_logs/records"
-    headers:
-      Authorization: "Bearer <your-pb-user-token>"
-    value_template: "{{ value_json.totalItems }}"
-    scan_interval: 300
-```
-
 ### Option B — Webhook on completion (recommended)
 
-`backend/pb_hooks/notify_homeassistant.pb.js` fires a POST to your HA webhook whenever a chore is completed.
-
-**Setup:**
-1. In HA, create an automation: Trigger → Webhook, note the webhook ID.
-2. Add to `backend/.env`:
-   ```
-   HA_WEBHOOK_URL=http://your-ha:8123/api/webhook/your-webhook-id
-   ```
-3. `docker compose restart`
-
-Payload sent:
-```json
-{ "chore": "Clean Toilet", "completed_by": "Alice", "notes": "" }
+Add to `backend/.env`:
 ```
+HA_WEBHOOK_URL=http://your-ha:8123/api/webhook/your-id
+```
+Then `docker compose restart pocketbase`. The hook fires on every chore completion with `{ chore, completed_by, notes }`.
 
-### Option C — MQTT bridge
+### Option A — REST sensor
 
-If you have MQTT in HA, a small bridge script can subscribe to PocketBase SSE and publish to MQTT topics. Ask an AI assistant to generate it — the SSE endpoint is `GET /api/realtime`.
+Poll PocketBase directly from `configuration.yaml` — no setup needed.
 
 ---
 
 ## Troubleshooting
 
 **"Cannot connect to the server"**
-- Make sure Docker Desktop is running
-- `docker compose ps` in `backend/` — `pocketbase-server` should show `Up`
-- Use `localhost` for the same machine, LAN IP for other devices
+- Check Docker is running: `docker compose ps`
+- On web: the app auto-connects to the same host on port 9010 — make sure port 9010 is accessible
 
-**Can't log in**
-- Passwords are set in the PocketBase Admin UI → Collections → users
-- Admin and user accounts are separate — admin credentials only work in the Admin UI
+**"App needs updating" / "Server needs updating"**
+- MAJOR versions must match. Run `.\release.ps1` or `docker compose up -d --build` to update
 
-**Port already in use**
-- Change `9010:9010` to e.g. `9011:9010` in `docker-compose.yaml`, update `BACKEND_URL` to match
-
-**Chores don't update in real-time**
-- All devices must be on the same network and pointing at the same server IP
-- Check browser console for SSE connection errors
+**Port conflict**
+- Change `9010:9010` or `9011:80` in `docker-compose.yaml`
 
 **APK won't install**
-- Ensure "Install unknown apps" is enabled for the app used to open the file
-- If updating, ensure the new APK was signed with the same keystore as the installed version
+- Ensure "Install unknown apps" is enabled
+- Ensure new APK was signed with the same keystore as installed version
 
 ---
 
@@ -289,8 +173,9 @@ If you have MQTT in HA, a small bridge script can subscribe to PocketBase SSE an
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Flutter 3.29+ (Dart) — Web, Desktop, Mobile |
-| Backend | PocketBase (Go) — Auth, REST API, SQLite, File Storage, SSE Realtime |
+| Frontend | Flutter 3.29+ (Dart) — Web, Android, iOS, Desktop |
+| Backend | PocketBase (Go) — Auth, REST API, SQLite, File Storage, SSE |
+| Web server | nginx:alpine — serves Flutter web build |
 | Infrastructure | Docker & Docker Compose |
 | State management | Provider (ChangeNotifier) |
 | Localisation | flutter_localizations + intl (EN / NL / ES) |

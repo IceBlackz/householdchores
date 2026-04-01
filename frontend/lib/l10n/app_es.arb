@@ -182,5 +182,50 @@
     "placeholders": {
       "days": { "type": "int" }
     }
-  }
+  },
+  "appVersionLabel": "App v",
+  "versionWarningTitle": "Advertencia de version",
+  "versionEndpointNotFound": "Este servidor no informa su version. Puede estar desactualizado. Continuar de todas formas?",
+  "versionCheckFailed": "No se pudo verificar la version del servidor. Continuar de todas formas?",
+  "continueAnyway": "Continuar de todas formas",
+  "appTooOld": "La app necesita actualizarse",
+  "appTooOldDetail": "Tu app (v{appVersion}) es demasiado antigua para este servidor (v{serverVersion}). Por favor actualiza la app.",
+  "@appTooOldDetail": {
+    "placeholders": {
+      "appVersion": { "type": "String" },
+      "serverVersion": { "type": "String" }
+    }
+  },
+  "serverTooOld": "El servidor necesita actualizarse",
+  "serverTooOldDetail": "Tu servidor (v{serverVersion}) es demasiado antiguo para esta app (v{appVersion}). Por favor actualiza el servidor.",
+  "@serverTooOldDetail": {
+    "placeholders": {
+      "serverVersion": { "type": "String" },
+      "appVersion": { "type": "String" }
+    }
+  },
+  "save": "Guardar",
+  "manageUsers": "Gestionar Usuarios",
+  "addUser": "Anadir Usuario",
+  "editUser": "Editar Usuario",
+  "deleteUser": "Eliminar Usuario",
+  "deleteUserConfirm": "Eliminar a {name}? No se puede deshacer.",
+  "@deleteUserConfirm": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "userDeleted": "Usuario eliminado.",
+  "userAdded": "Usuario anadido!",
+  "userUpdated": "Usuario actualizado!",
+  "adminBadge": "Admin",
+  "adminBadgeSubtitle": "Puede gestionar usuarios y configuracion",
+  "userName": "Nombre",
+  "newPassword": "Nueva Contrasena",
+  "passwordConfirm": "Confirmar Contrasena",
+  "changePassword": "Cambiar contrasena",
+  "passwordsDoNotMatch": "Las contrasenas no coinciden",
+  "passwordTooShort": "La contrasena debe tener al menos 8 caracteres",
+  "cannotDeleteSelf": "No puedes eliminar tu propia cuenta",
+  "noUsersFound": "No se encontraron usuarios",
+  "youLabel": "tu",
+  "completedBy": "Completado por"
 }
