@@ -5,10 +5,10 @@ import '../constants/app_constants.dart';
 import '../models/app_user.dart';
 import '../models/chore.dart';
 import '../models/chore_log.dart';
+import 'pocketbase_service.dart';
 
 class ChoreService {
-  final PocketBase _pb;
-  ChoreService(this._pb);
+  PocketBase get _pb => PocketBaseService().client;
 
   // --------------------------------------------------------------------------
   // Chores

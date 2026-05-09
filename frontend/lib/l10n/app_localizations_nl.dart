@@ -481,5 +481,93 @@ class AppLocalizationsNl extends AppLocalizations {
   String get youLabel => 'jij';
 
   @override
+  String get dashboardOverview => 'Vandaag thuis';
+
+  @override
+  String dashboardSubtitle(String houseName, String userName) {
+    return '$houseName is actief. Ingelogd als $userName.';
+  }
+
+  @override
+  String dashboardSubtitleNoUser(String houseName) {
+    return '$houseName is actief.';
+  }
+
+  @override
+  String get assignedToMe => 'Aan mij toegewezen';
+
+  @override
+  String get needsAttention => 'Heeft aandacht nodig';
+
+  @override
+  String get critical => 'Kritiek';
+
+  @override
+  String get totalChores => 'Totaal taken';
+
+  @override
+  String get filterAll => 'Alles';
+
+  @override
+  String get filterMine => 'Van mij';
+
+  @override
+  String get filterNeedsAttention => 'Aandacht';
+
+  @override
+  String get filterCritical => 'Kritiek';
+
+  @override
+  String get gettingStartedTitle => 'Begin met je eerste routine';
+
+  @override
+  String get gettingStartedBody =>
+      'Voeg een taak toe, kies hoe vaak die moet gebeuren en wijs hem aan iemand toe. Na voltooiing plant het dashboard automatisch de volgende datum.';
+
+  @override
+  String get addFirstChore => 'Eerste taak toevoegen';
+
+  @override
+  String get configureHouse => 'Huis configureren';
+
+  @override
+  String get gettingStartedAddChoreTitle => 'Maak praktische taken';
+
+  @override
+  String get gettingStartedAddChoreBody =>
+      'Gebruik duidelijke namen, normale intervallen, harde deadlines en optionele seizoensinstellingen voor klussen die per seizoen veranderen.';
+
+  @override
+  String get gettingStartedUsersTitle => 'Voeg huisgenoten toe';
+
+  @override
+  String get gettingStartedUsersBody =>
+      'Beheerders kunnen gebruikers toevoegen, beheerders instellen en vaste eigenaars toewijzen zodat iedereen ziet wat van hen is.';
+
+  @override
+  String get gettingStartedCompleteTitle => 'Tik op een taak om af te ronden';
+
+  @override
+  String get gettingStartedCompleteBody =>
+      'Je kunt een taak voltooien, notities of foto\'s toevoegen en hem indien nodig namens iemand anders afronden.';
+
+  @override
+  String get dashboardHelpTitle => 'Zo werkt dit dashboard';
+
+  @override
+  String get dashboardHelpFiltersTitle => 'Gebruik filters voor focus';
+
+  @override
+  String get dashboardHelpFiltersBody =>
+      'Van mij toont jouw taken, Aandacht toont taken die nu moeten of te laat zijn, en Kritiek toont taken voorbij de harde deadline.';
+
+  @override
+  String get noFilteredChoresTitle => 'Niets in deze weergave';
+
+  @override
+  String get noFilteredChoresBody =>
+      'Probeer een ander filter of seizoen, of geniet even van een lege lijst.';
+
+  @override
   String get completedBy => 'Voltooid door';
 }

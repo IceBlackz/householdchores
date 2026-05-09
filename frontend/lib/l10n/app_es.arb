@@ -227,5 +227,42 @@
   "cannotDeleteSelf": "No puedes eliminar tu propia cuenta",
   "noUsersFound": "No se encontraron usuarios",
   "youLabel": "tu",
+  "dashboardOverview": "Hoy en casa",
+  "dashboardSubtitle": "{houseName} esta activo. Sesion iniciada como {userName}.",
+  "@dashboardSubtitle": {
+    "placeholders": {
+      "houseName": { "type": "String" },
+      "userName": { "type": "String" }
+    }
+  },
+  "dashboardSubtitleNoUser": "{houseName} esta activo.",
+  "@dashboardSubtitleNoUser": {
+    "placeholders": {
+      "houseName": { "type": "String" }
+    }
+  },
+  "assignedToMe": "Asignadas a mi",
+  "needsAttention": "Necesitan atencion",
+  "critical": "Criticas",
+  "totalChores": "Total de tareas",
+  "filterAll": "Todas",
+  "filterMine": "Mias",
+  "filterNeedsAttention": "Atencion",
+  "filterCritical": "Criticas",
+  "gettingStartedTitle": "Empieza con tu primera rutina",
+  "gettingStartedBody": "Anade una tarea, elige cada cuanto debe hacerse y asignala a alguien. Cuando se completa, el panel calcula automaticamente la siguiente fecha.",
+  "addFirstChore": "Anadir primera tarea",
+  "configureHouse": "Configurar hogar",
+  "gettingStartedAddChoreTitle": "Crea tareas practicas",
+  "gettingStartedAddChoreBody": "Usa nombres claros, intervalos normales, fechas limite y ajustes por temporada para trabajos que cambian durante el ano.",
+  "gettingStartedUsersTitle": "Anade miembros del hogar",
+  "gettingStartedUsersBody": "Los admins pueden anadir usuarios, asignar admins y definir responsables recurrentes para que cada persona vea lo suyo.",
+  "gettingStartedCompleteTitle": "Toca una tarea para completarla",
+  "gettingStartedCompleteBody": "Puedes marcar una tarea como hecha, anadir notas o fotos y completarla en nombre de otra persona si hace falta.",
+  "dashboardHelpTitle": "Como funciona este panel",
+  "dashboardHelpFiltersTitle": "Usa filtros para enfocarte",
+  "dashboardHelpFiltersBody": "Mias muestra tus tareas, Atencion muestra tareas vencidas o para hoy, y Criticas muestra tareas que pasaron el plazo maximo.",
+  "noFilteredChoresTitle": "Nada en esta vista",
+  "noFilteredChoresBody": "Prueba otro filtro o temporada, o disfruta por un momento de una lista vacia.",
   "completedBy": "Completado por"
 }

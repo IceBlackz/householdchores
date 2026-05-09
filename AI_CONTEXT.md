@@ -1,320 +1,263 @@
 # AI Developer Context
 
-Hello AI assistant! Read this document carefully before making any changes. It describes the full architecture, schema, business logic, known bugs, and conventions for the Household Chores app.
+This document is for future AI/developer sessions. It summarizes the current architecture, conventions, and important gotchas for Household Chores Manager.
 
----
-
-## Architecture
+## Current Architecture
 
 | Layer | Technology |
-|-------|-----------|
-| Backend | PocketBase (Go) in Docker on port 9010 |
-| Web server | nginx:alpine in Docker on port 9011 |
-| Frontend | Flutter (Dart) — Web, Android, iOS, Desktop |
-| State management | Provider (`ChangeNotifier`) |
-| Localisation | `flutter_localizations` + `intl` + ARB files |
-| Auth | PocketBase email/password; JWT handled by `pocketbase` Dart SDK |
+| --- | --- |
+| Backend | PocketBase in Docker on port 9010 |
+| Web app | Flutter web build served by nginx on port 9011 |
+| Mobile app | Flutter Android/iOS |
+| State management | Provider and ChangeNotifier |
+| Auth | PocketBase email/password auth |
+| Localization | Flutter gen-l10n with EN/NL/ES ARB files |
+| Notifications | Local Android/iOS notifications plus optional Home Assistant webhook digest |
 
-### Project structure
+## Project Structure
 
-```
-householdchores/               ← repo root — run docker compose from here
-  docker-compose.yaml          ← orchestrates pocketbase + web
-  Dockerfile.web               ← multi-stage: Flutter build → nginx
-  .dockerignore                ← excludes .dart_tool/ and build/ from Docker context
-  VERSION                      ← single version source of truth (e.g. 1.0.0)
-  release.ps1                  ← version bump, APK build, git tag, push
-  prepare_context.bat          ← cleans project and zips for AI handoff
+```text
+householdchores/
+  docker-compose.yaml
+  Dockerfile
+  README.md
+  AI_CONTEXT.md
   backend/
-    Dockerfile                 ← PocketBase container
-    nginx.conf                 ← nginx config (baked into web image)
-    .env                       ← ADMIN_EMAIL, ADMIN_PASSWORD, HA_WEBHOOK_URL
-    pb_hooks/                  ← volume-mounted JS hooks
-      version.pb.js            ← exposes GET /api/householdchores/version
+    .env.example
+    entrypoint.sh
+    nginx.conf
+    pb_data/
+    pb_hooks/
+      due_reminders.pb.js
       notify_homeassistant.pb.js
-    pb_migrations/             ← volume-mounted, auto-applied on start
-    pb_data/                   ← bind-mounted SQLite + uploads — NEVER deleted
+      version.pb.js
+    pb_migrations/
   frontend/
     lib/
-      config/app_config.dart   ← appVersion const + dynamic backendUrl getter
-      constants/               ← AppConstants, Collections, IntervalUnits
-      models/                  ← Chore, ChoreLog, AppUser (typed, immutable)
-      services/                ← ChoreService, AuthService, PocketBaseService,
-                                  VersionService, ConnectionValidator
-      providers/               ← ChoreProvider, HouseProvider, LocaleProvider
+      config/
+      constants/
+      l10n/
+      models/
+        notification_settings.dart
+      providers/
       screens/
-        dashboard/             ← main chore list + season filter
-        login/                 ← login + version check + house switcher
-        add_chore/             ← create/edit chore form
-        complete_chore/        ← mark done + completed-by picker + photos
-        configuration/         ← house management (add/edit/delete/test)
-        history/               ← completion log per chore
-        admin/                 ← user_management_screen.dart (admin only)
-      l10n/                    ← app_en.arb, app_nl.arb, app_es.arb + generated
+        admin/
+        dashboard/
+      services/
+        notification_service.dart
+        settings_service.dart
 ```
 
----
+## Docker Rules
 
-## Docker — critical rules
+Run Docker Compose from the repository root:
 
-**Always run docker compose from the repo root**, never from `backend/`:
-```bash
-docker compose up -d --build   # build + start
+```powershell
+docker compose up -d --build
+docker compose ps
 docker compose logs -f pocketbase
 docker compose restart pocketbase
-docker compose down
 ```
 
-**Why `docker-compose.yaml` is at root:** Both services need to see `frontend/` and `backend/`. Using a single build context (`.`) with explicit dockerfile paths avoids a Docker Desktop Windows bug where BuildKit fails to resolve dockerfile paths when services have different contexts.
+Important:
 
-**`.dockerignore` is critical.** It excludes `frontend/.dart_tool/` which contains `package_config.json` with Windows absolute paths (`C:\Users\...`) that break `dart format` inside the Linux container. Never remove it.
+- `Dockerfile` has two targets: `pocketbase` and `web`.
+- `docker-compose.yaml` builds both services from the repository root.
+- `backend/pb_data/` is persistent application data. Never delete it unless the user explicitly asks.
+- `backend/pb_migrations/` and `backend/pb_hooks/` are mounted into the PocketBase container.
+- `.dockerignore` must exclude Flutter generated folders such as `frontend/.dart_tool/` and build output.
 
-**Data safety:** `backend/pb_data/` is a bind mount. It survives any `docker compose up -d --build` or `docker compose down`. Never add it to `.dockerignore`.
+## Backend Startup
 
----
+`backend/entrypoint.sh` starts PocketBase and upserts the configured superuser from:
 
-## Services — critical design rules
-
-### PocketBaseService (singleton)
-Single `PocketBase client` instance. All services share it. Initialised in `main.dart` via `PocketBaseService().init(AppConfig.backendUrl)`.
-
-### AuthService (singleton)
-Uses `PocketBase get _pb => PocketBaseService().client` — **never** a separate `PocketBase? _pb` field. The old pattern caused "Not initialized" at login. Has `isCurrentUserAdmin` getter.
-
-### HouseProvider
-`defaultLocalHouseUrl` is a **static getter** delegating to `AppConfig.backendUrl` — **never** a `const String`. On web, `AppConfig.backendUrl` reads `Uri.base` and returns `http://[same-host]:9010`, so the app served from `:9011` automatically connects to `:9010`.
-
-### VersionService
-Calls `GET /api/householdchores/version` before login. MAJOR version mismatch blocks login. Missing endpoint / network error shows a dismissable warning. `endpointNotFound` means the server predates versioning.
-
-### ChoreService
-`completeChore(choreId, {String? completedBy, ...})` — `completedBy` defaults to logged-in user but can be overridden to mark a chore done on behalf of another user.
-
----
-
-## Backend URL — web auto-detection
-
-`AppConfig.backendUrl` (in `lib/config/app_config.dart`):
-```dart
-static String get backendUrl {
-  if (kIsWeb) {
-    final base = Uri.base;          // e.g. http://192.168.1.42:9011
-    return '${base.scheme}://${base.host}:9010';  // → http://192.168.1.42:9010
-  }
-  return String.fromEnvironment('BACKEND_URL', defaultValue: 'http://127.0.0.1:9010');
-}
+```env
+ADMIN_EMAIL
+ADMIN_PASSWORD
 ```
-This means the web app requires **zero configuration** — it always talks to the backend on the same host.
 
----
+The PocketBase superuser is for the PocketBase admin UI. Normal app users live in the `users` auth collection.
 
-## Versioning
+## App User Admin Flow
 
-- `VERSION` file at repo root is the single source of truth
-- `backend/pb_hooks/version.pb.js` exposes `GET /api/householdchores/version`
-- `AppConfig.appVersion` constant in `app_config.dart`
-- `release.ps1` updates all three atomically, builds APK, tags git
-- MAJOR version compatibility: app 1.x ↔ server 1.x ✓ — app 1.x ↔ server 2.x ✗
+The first normal app user must be created in PocketBase admin UI:
 
----
+1. Log into `http://localhost:9010/_/` with the superuser.
+2. Open `users`.
+3. Create a user.
+4. Set `is_admin = true`.
 
-## Database Schema
+After that, app admins can manage users from the dashboard.
+
+## Collections
 
 ### `chores`
 
-| Field | Type | Notes |
-|-------|------|-------|
-| `title` | Text | |
-| `description` | Text | |
-| `interval_desired_days` | Number | Target recurrence value |
-| `interval_max_days` | Number | Hard deadline value |
-| `interval_unit` | Select | `days`/`weeks`/`months`/`quarters`/`years` |
-| `season` | Select | `All`/`Spring`/`Summer`/`Autumn`/`Winter` |
-| `default_assignee` | Relation → `users` | Max 1, optional |
-| `onetimeonly_assignee` | Relation → `users` | Cleared on completion |
-| `season_spring_override` | Number | 0 = use default |
-| `season_summer_override` | Number | |
-| `season_autumn_override` | Number | |
-| `season_winter_override` | Number | |
+Important fields:
+
+- `title`
+- `description`
+- `interval_desired_days`
+- `interval_max_days`
+- `interval_unit`: days/weeks/months/quarters/years
+- `season`: All/Spring/Summer/Autumn/Winter
+- `default_assignee`
+- `onetimeonly_assignee`
+- `season_spring_override`
+- `season_summer_override`
+- `season_autumn_override`
+- `season_winter_override`
 
 ### `chore_logs`
 
-| Field | Type | Notes |
-|-------|------|-------|
-| `chore` | Relation → `chores` | cascadeDelete = true |
-| `completed_by` | Relation → `users` | Can differ from logged-in user |
-| `photo_before` | File | Max 1 |
-| `photo_after` | File | Max 1 |
-| `notes` | Text | |
+Important fields:
 
-Index: `CREATE INDEX idx_chore_logs_chore_created ON chore_logs (chore, created DESC)`
+- `chore`
+- `completed_by`
+- `photo_before`
+- `photo_after`
+- `notes`
 
-### `users` (auth collection)
+### `users`
 
-| Field | Type | Notes |
-|-------|------|-------|
-| `name` | Text | Display name |
-| `email` | Text | Login credential |
-| `is_admin` | Bool | Added by migration 1774900001 |
+PocketBase auth collection with app-specific fields:
 
-**Collection rules (post migration 1774900001):**
-- Create/Delete: `@request.auth.id != "" && @request.auth.is_admin = true`
-- Update: `@request.auth.id != "" && (@request.auth.is_admin = true || @request.auth.id = id)`
+- `name`
+- `is_admin`
 
----
+### `app_settings`
 
-## Core Business Logic
+Stores admin-configurable app settings.
 
-### Due Date Calculation
+Current key:
 
-`Chore` exposes two date methods:
+```text
+notification_settings
+```
 
-**`nextDueDate(DateTime lastCompleted, String activeSeason)`** — desired:
-1. Check season override (> 0 = use it, else use `intervalDesiredDays`)
-2. Apply via `intervalUnit` arithmetic (months/quarters/years use calendar math, not days × N)
+Value is JSON represented by `NotificationSettings` in `frontend/lib/models/notification_settings.dart`.
 
-**`maxDueDate(DateTime lastCompleted)`** — hard deadline:
-- Always uses `intervalMaxDays`, no season overrides
+## Notification Behavior
 
-### Dashboard Status (`ChoreListTile`)
+Admin settings screen:
 
-| Condition | Badge | Colour |
-|-----------|-------|--------|
-| `dueDate.year < 2000` (sentinel) | "Never completed" | Red |
-| `today > maxDueDate` | "!! Xd past max" | Dark red + warning icon |
-| `today > dueDate` | "Overdue (X days)" — `abs()` | Orange |
-| `today == dueDate` | "Due today" | Orange |
-| `today < dueDate` | "Due in X d" | Green |
+```text
+frontend/lib/screens/admin/app_settings_screen.dart
+```
 
-### SSE Refresh Deduplication
-`_onRealtimeEvent` checks `if (_isLoading) return` — prevents double-fetch when a manual `completeChore()` triggers an SSE event while its own `refresh()` is in flight.
+Settings service:
 
-### N+1 Prevention
-`ChoreService.fetchLatestLogPerChore` batches all chore IDs into a single OR-filter query.
+```text
+frontend/lib/services/settings_service.dart
+```
 
----
+Local notification scheduler:
 
-## User Management (Admin)
+```text
+frontend/lib/services/notification_service.dart
+```
 
-- `is_admin = true` users see a `manage_accounts` icon in the dashboard AppBar
-- Opens `UserManagementScreen` — create/edit/delete users, set admin flag
-- Cannot delete your own account
-- Uses PocketBase's auth collection create/update/delete APIs
+Important behavior:
 
----
+- Local notifications are supported only on Android, iOS, and macOS.
+- Web returns early and does not try to initialize local notifications.
+- Notifications are scheduled after dashboard chore sync.
+- `matchDateTimeComponents: DateTimeComponents.time` repeats reminders daily at the configured time.
+- Quiet hours can move the reminder time outside the quiet window.
+- Escalation days can make overdue chores count as critical.
+- The action ID `complete` opens the app and completes the chore for the signed-in user.
 
-## Localisation: How to deliver new ARB keys
+Server push is not implemented yet. The settings model has `serverPushEnabled`, but true push still needs FCM/APNs credentials, device-token registration, and a backend sender.
 
-**Never ask the user to manually edit ARB files.** Always deliver a self-deleting PowerShell script named `patch_l10n.ps1` dropped into `frontend/`.
+## Home Assistant Hooks
 
-### Rules
-- Use escaped double-quotes (`""`) — **never** PowerShell here-strings
-- Idempotency: check with `-match` before inserting
-- Always end with `flutter gen-l10n` then `Remove-Item`
+`backend/pb_hooks/notify_homeassistant.pb.js` can notify Home Assistant when a chore is completed.
 
-### Template
+`backend/pb_hooks/due_reminders.pb.js` provides:
+
+- Cron-driven due reminder digest.
+- Manual endpoint: `POST /api/householdchores/reminders/send?token=...`
+- Action endpoint: `/api/householdchores/actions/complete?token=...`
+
+The due digest reads app settings first, with environment variables as fallback.
+
+Useful env vars:
+
+```env
+HA_WEBHOOK_URL
+HA_DUE_WEBHOOK_URL
+HA_DUE_REMINDER_CRON
+HA_ACTION_SECRET
+PUBLIC_BACKEND_URL
+HA_ACTION_TOKEN_TTL_SECONDS
+```
+
+## Frontend Services
+
+### PocketBaseService
+
+Singleton PocketBase client. Other services should use `PocketBaseService().client`.
+
+### AuthService
+
+Uses the shared PocketBase client. Do not create a separate PocketBase instance inside AuthService.
+
+### HouseProvider
+
+Tracks configured houses and active house. Web auto-detects backend URL from the current host and port `9010`.
+
+### ChoreProvider
+
+Fetches chores, latest logs, due dates, and max due dates. Exposes `dueDates` and `maxDueDates` maps for notification scheduling.
+
+### ChoreService
+
+Uses the shared PocketBase client dynamically, so house switching works.
+
+## Localization
+
+Source files:
+
+```text
+frontend/lib/l10n/app_en.arb
+frontend/lib/l10n/app_nl.arb
+frontend/lib/l10n/app_es.arb
+```
+
+After editing ARB files:
+
 ```powershell
-# patch_l10n.ps1
-Set-StrictMode -Version Latest
-$ErrorActionPreference = 'Stop'
-$l10nDir = "$PSScriptRoot\lib\l10n"
-
-function Add-Key($file, $key, $fragment) {
-  $path = Join-Path $l10nDir $file
-  $content = Get-Content $path -Raw -Encoding UTF8
-  if ($content -match """$key""") {
-    Write-Host "  $file - $key already present, skipping."; return
-  }
-  $content = $content.TrimEnd().TrimEnd('}').TrimEnd() + ",`n$fragment`n}"
-  Set-Content $path -Value $content -Encoding UTF8 -NoNewline
-  Write-Host "  $file - $key added."
-}
-
-Add-Key 'app_en.arb' 'myKey' '  "myKey": "English value"'
-Add-Key 'app_nl.arb' 'myKey' '  "myKey": "Dutch value"'
-Add-Key 'app_es.arb' 'myKey' '  "myKey": "Spanish value"'
-
-Push-Location $PSScriptRoot
+cd frontend
 flutter gen-l10n
-Pop-Location
-Remove-Item "$PSScriptRoot\patch_l10n.ps1" -Force
 ```
 
-For placeholder keys, build the annotation string using `+` concatenation (no here-strings).
+Generated files in `frontend/lib/l10n/app_localizations*.dart` are currently committed in this project.
 
----
+## Verification Commands
 
-## How to deliver code files to the user
+From `frontend/`:
 
-**Always deliver complete files — never diffs, partial snippets, or "replace this section".**
-
-Use `create_file` → `/mnt/user-data/outputs/filename` then `present_files`. Do this for **every** source file that changes.
-
-If a file would exceed ~400 lines, split it first (extract widgets to `widgets/`, helpers to services), then deliver both smaller files in full.
-
-**Never** paste source files inline in chat as code blocks — use the file tool. Inline blocks are only for: short illustrations, CLI commands, and `patch_l10n.ps1` scripts.
-
----
-
-## Framework Quirks & Gotchas
-
-### PocketBase Dart SDK
-- Use `record.get<RecordModel?>('expand.field')` — not `record.expand['field']`
-- Use `record.getStringValue('created')` — not `record.created`
-- Never use `getFirstListItem()` when result may be empty (throws 404) — use `getFullList` with filter
-- `subscribe()` returns `Future<UnsubscribeFunc>` — store and call in `dispose()`
-
-### Flutter Web File Uploads
-```dart
-final bytes = await xfile.readAsBytes();
-http.MultipartFile.fromBytes('field', bytes, filename: xfile.name)
+```powershell
+flutter analyze
+flutter test
 ```
 
-### Flutter Colors
-Use `.withValues(alpha: 0.1)` not deprecated `.withOpacity(0.1)`
+From repo root:
 
-### BuildContext Across Async Gaps
-Capture `l10n`, `ScaffoldMessenger` etc. **before** any `await`. Guard with `if (mounted)` after.
-
-### http Package (v1.x)
-Chain `.timeout()` on the Future — it is not a named param:
-```dart
-await client.get(uri).timeout(Duration(milliseconds: ms));
+```powershell
+docker compose up -d --build
+docker compose ps
+curl http://localhost:9010/api/health
+curl http://localhost:9011/
 ```
 
-### ChangeNotifierProvider
-Always use `create:` — never `.value()` with a freshly constructed object.
+## Common Gotchas
 
-### Docker + Windows
-`.dockerignore` **must** exclude `frontend/.dart_tool/` — it contains `package_config.json` with Windows absolute paths that break `dart format` in the Linux container.
-
----
-
-## Backend Migrations
-
-JS files in `backend/pb_migrations/` auto-apply on container start. Format:
-```js
-migrate((app) => { /* up */ }, (app) => { /* down */ })
-```
-Reference collections by `app.findCollectionByNameOrId("name")`. New fields need a stable `id` string.
-
----
-
-## Useful Commands
-
-```bash
-# From repo root:
-docker compose up -d --build      # start / rebuild everything
-docker compose restart pocketbase # restart backend (picks up hook changes)
-docker compose logs -f pocketbase # live backend logs
-docker compose ps                 # check container status
-
-# Frontend (from frontend/):
-flutter pub get
-flutter analyze                   # must return zero issues
-flutter gen-l10n                  # after editing ARB files
-flutter run -d chrome             # dev run (connects to localhost:9010)
-
-# Release (from repo root):
-.\release.ps1 -Version X.Y.Z     # full release pipeline
-```
+- Do not revert unrelated dirty work. The repo may already contain user changes.
+- Do not delete `backend/pb_data/`.
+- Do not use `git reset --hard` unless the user explicitly requests it.
+- Use `apply_patch` for manual edits.
+- On Windows, Flutter/Dart commands may need to run outside sandbox because SDK/cache access can hang or be denied.
+- PocketBase `getFirstListItem()` throws on 404. Use `getFullList()` when an empty result is expected.
+- Capture Flutter `BuildContext` dependencies before `await`, then check `mounted` after awaits.
+- For Flutter web uploads, use bytes-based multipart files.

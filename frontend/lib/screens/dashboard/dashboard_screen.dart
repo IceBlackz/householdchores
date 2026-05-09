@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../constants/app_constants.dart';
@@ -7,12 +8,18 @@ import '../../providers/chore_provider.dart';
 import '../../providers/house_provider.dart';
 import '../../providers/locale_provider.dart';
 import '../../services/auth_service.dart';
+import '../../services/notification_service.dart';
+import '../../services/settings_service.dart';
+import '../admin/app_settings_screen.dart';
 import '../add_chore/add_chore_screen.dart';
 import '../admin/user_management_screen.dart';
+import '../configuration/configuration_screen.dart';
 import '../complete_chore/complete_chore_screen.dart';
 import '../history/chore_history_screen.dart';
 import '../login/login_screen.dart';
 import 'widgets/chore_list_tile.dart';
+
+enum _DashboardFilter { all, mine, attention, critical }
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -22,6 +29,9 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  _DashboardFilter _workloadFilter = _DashboardFilter.all;
+  StreamSubscription<String>? _notificationSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -31,19 +41,102 @@ class _DashboardScreenState extends State<DashboardScreen> {
       provider.setSeasonFilter(ChoreProvider.currentSeason());
       await provider.refresh(currentUserId);
       await provider.initRealtime(currentUserId);
+      await _syncMobileNotifications();
+      await _completePendingNotificationAction();
     });
+    _notificationSubscription = NotificationService.instance.completeActions
+        .listen((choreId) {
+          _completeChoreFromNotification(choreId);
+        });
+  }
+
+  @override
+  void dispose() {
+    _notificationSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _refresh() async {
     final currentUserId = context.read<AuthService>().currentUserId ?? '';
     await context.read<ChoreProvider>().refresh(currentUserId);
+    await _syncMobileNotifications();
+  }
+
+  Future<void> _syncMobileNotifications() async {
+    final auth = context.read<AuthService>();
+    final settingsService = context.read<SettingsService>();
+    final choreProvider = context.read<ChoreProvider>();
+    final currentUserId = auth.currentUserId;
+    if (currentUserId == null || currentUserId.isEmpty) return;
+
+    try {
+      final settings = await settingsService.fetchNotificationSettings();
+      if (!mounted) return;
+      await NotificationService.instance.scheduleDueReminders(
+        chores: choreProvider.chores,
+        dueDates: choreProvider.dueDates,
+        maxDueDates: choreProvider.maxDueDates,
+        currentUserId: currentUserId,
+        settings: settings,
+      );
+    } catch (_) {
+      // Notification scheduling should never block using the dashboard.
+    }
+  }
+
+  Future<void> _completePendingNotificationAction() async {
+    final choreId = NotificationService.instance.takePendingCompleteAction();
+    if (choreId != null) {
+      await _completeChoreFromNotification(choreId);
+    }
+  }
+
+  Future<void> _completeChoreFromNotification(String choreId) async {
+    if (!mounted) return;
+    final currentUserId = context.read<AuthService>().currentUserId;
+    if (currentUserId == null || currentUserId.isEmpty) return;
+
+    try {
+      await context.read<ChoreProvider>().completeChore(choreId, currentUserId);
+      await _syncMobileNotifications();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.taskCompleted),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.failedToSubmit(e.toString()),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void _logout() {
     context.read<AuthService>().logout();
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-    );
+    Navigator.of(
+      context,
+    ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
+  }
+
+  Future<void> _switchHouse(String houseId) async {
+    final houseProvider = context.read<HouseProvider>();
+    if (houseId == houseProvider.activeHouseId) return;
+
+    await houseProvider.switchHouse(houseId);
+    if (!mounted) return;
+
+    context.read<AuthService>().logout();
+    Navigator.of(
+      context,
+    ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
   }
 
   Future<void> _confirmDelete(Chore chore) async {
@@ -69,19 +162,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (confirmed == true && mounted) {
       final currentUserId = context.read<AuthService>().currentUserId ?? '';
       try {
-        await context.read<ChoreProvider>().deleteChore(chore.id, currentUserId);
+        await context.read<ChoreProvider>().deleteChore(
+          chore.id,
+          currentUserId,
+        );
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(AppLocalizations.of(context)!.choreDeleted),
-            backgroundColor: Colors.orange,
-          ));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.choreDeleted),
+              backgroundColor: Colors.orange,
+            ),
+          );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(AppLocalizations.of(context)!.failedToDelete(e.toString())),
-            backgroundColor: Colors.red,
-          ));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context)!.failedToDelete(e.toString()),
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
         }
       }
     }
@@ -99,23 +201,116 @@ class _DashboardScreenState extends State<DashboardScreen> {
             label: l10n.languageEnglish,
             locale: const Locale('en'),
             current: localeProvider.locale,
-            onTap: (locale) { localeProvider.setLocale(locale); Navigator.of(ctx).pop(); },
+            onTap: (locale) {
+              localeProvider.setLocale(locale);
+              Navigator.of(ctx).pop();
+            },
           ),
           _LanguageTile(
             label: l10n.languageDutch,
             locale: const Locale('nl'),
             current: localeProvider.locale,
-            onTap: (locale) { localeProvider.setLocale(locale); Navigator.of(ctx).pop(); },
+            onTap: (locale) {
+              localeProvider.setLocale(locale);
+              Navigator.of(ctx).pop();
+            },
           ),
           _LanguageTile(
             label: l10n.languageSpanish,
             locale: const Locale('es'),
             current: localeProvider.locale,
-            onTap: (locale) { localeProvider.setLocale(locale); Navigator.of(ctx).pop(); },
+            onTap: (locale) {
+              localeProvider.setLocale(locale);
+              Navigator.of(ctx).pop();
+            },
           ),
         ],
       ),
     );
+  }
+
+  void _showGettingStartedSheet() {
+    final l10n = AppLocalizations.of(context)!;
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+          children: [
+            Text(
+              l10n.dashboardHelpTitle,
+              style: Theme.of(
+                ctx,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            _GuideRow(
+              icon: Icons.add_task,
+              color: Colors.teal,
+              title: l10n.gettingStartedAddChoreTitle,
+              body: l10n.gettingStartedAddChoreBody,
+            ),
+            _GuideRow(
+              icon: Icons.group,
+              color: Colors.indigo,
+              title: l10n.gettingStartedUsersTitle,
+              body: l10n.gettingStartedUsersBody,
+            ),
+            _GuideRow(
+              icon: Icons.done_all,
+              color: Colors.green,
+              title: l10n.gettingStartedCompleteTitle,
+              body: l10n.gettingStartedCompleteBody,
+            ),
+            _GuideRow(
+              icon: Icons.filter_alt,
+              color: Colors.deepOrange,
+              title: l10n.dashboardHelpFiltersTitle,
+              body: l10n.dashboardHelpFiltersBody,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  bool _isDueOrOverdue(Chore chore, ChoreProvider provider) {
+    final dueDate = provider.dueDate(chore.id);
+    if (dueDate == null || dueDate.year < 2000) return true;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final dueDay = DateTime(dueDate.year, dueDate.month, dueDate.day);
+    return !dueDay.isAfter(today);
+  }
+
+  bool _isCritical(Chore chore, ChoreProvider provider) {
+    final maxDate = provider.maxDueDate(chore.id);
+    if (maxDate == null || maxDate.year < 2000) return false;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final maxDay = DateTime(maxDate.year, maxDate.month, maxDate.day);
+    return maxDay.isBefore(today);
+  }
+
+  List<Chore> _filteredChores(
+    List<Chore> chores,
+    ChoreProvider provider,
+    String currentUserId,
+  ) {
+    switch (_workloadFilter) {
+      case _DashboardFilter.mine:
+        return chores
+            .where((c) => c.activeAssigneeId == currentUserId)
+            .toList();
+      case _DashboardFilter.attention:
+        return chores.where((c) => _isDueOrOverdue(c, provider)).toList();
+      case _DashboardFilter.critical:
+        return chores.where((c) => _isCritical(c, provider)).toList();
+      case _DashboardFilter.all:
+        return chores;
+    }
   }
 
   @override
@@ -126,6 +321,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final authService = context.read<AuthService>();
     final currentUserId = authService.currentUserId ?? '';
     final chores = provider.chores;
+    final visibleChores = _filteredChores(chores, provider, currentUserId);
+    final assignedToMe = chores
+        .where((c) => c.activeAssigneeId == currentUserId)
+        .length;
+    final needsAttention = chores
+        .where((c) => _isDueOrOverdue(c, provider))
+        .length;
+    final critical = chores.where((c) => _isCritical(c, provider)).length;
     final activeFilter = provider.seasonFilter;
 
     return Scaffold(
@@ -135,20 +338,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
           // House switcher
           PopupMenuButton<String>(
             onSelected: (houseId) async {
-              await context.read<HouseProvider>().switchHouse(houseId);
+              await _switchHouse(houseId);
             },
-            itemBuilder: (_) => houseProvider.houses.map((house) =>
-              PopupMenuItem(
-                value: house.id,
-                child: Row(children: [
-                  Icon(Icons.home,
-                    color: house.id == houseProvider.activeHouseId
-                        ? Colors.teal : Colors.grey),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(house.name)),
-                ]),
-              ),
-            ).toList(),
+            itemBuilder: (_) => houseProvider.houses
+                .map(
+                  (house) => PopupMenuItem(
+                    value: house.id,
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.home,
+                          color: house.id == houseProvider.activeHouseId
+                              ? Colors.teal
+                              : Colors.grey,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text(house.name)),
+                      ],
+                    ),
+                  ),
+                )
+                .toList(),
           ),
           // Admin-only: user management
           if (authService.isCurrentUserAdmin)
@@ -159,10 +369,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 MaterialPageRoute(builder: (_) => const UserManagementScreen()),
               ),
             ),
+          if (authService.isCurrentUserAdmin)
+            IconButton(
+              icon: const Icon(Icons.tune),
+              tooltip: 'App settings',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const AppSettingsScreen()),
+              ),
+            ),
           IconButton(
             icon: const Icon(Icons.language),
             onPressed: _showLanguagePicker,
             tooltip: l10n.selectLanguage,
+          ),
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            onPressed: _showGettingStartedSheet,
+            tooltip: l10n.dashboardHelpTitle,
           ),
           IconButton(
             icon: const Icon(Icons.logout),
@@ -192,73 +415,506 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : provider.error != null
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(provider.error!,
-                          style: const TextStyle(color: Colors.red)),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                          onPressed: _refresh, child: Text(l10n.retry)),
-                    ],
+          ? Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    provider.error!,
+                    style: const TextStyle(color: Colors.red),
                   ),
-                )
-              : chores.isEmpty
-                  ? Center(child: Text(l10n.noChoresRelax))
-                  : RefreshIndicator(
-                      onRefresh: _refresh,
-                      child: ListView.builder(
-                        itemCount: chores.length,
-                        itemBuilder: (context, index) {
-                          final chore = chores[index];
-                          final due =
-                              provider.dueDate(chore.id) ?? DateTime.now();
-                          final maxDue =
-                              provider.maxDueDate(chore.id) ?? DateTime.now();
-                          return ChoreListTile(
-                            chore: chore,
-                            dueDate: due,
-                            maxDueDate: maxDue,
-                            currentUserId: currentUserId,
-                            onTap: () async {
-                              final messenger = ScaffoldMessenger.of(context);
-                              final msg = AppLocalizations.of(context)!
-                                  .taskCompleted;
-                              final result =
-                                  await Navigator.of(context).push<bool>(
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      CompleteChoreScreen(chore: chore),
-                                ),
-                              );
-                              if (result == true && mounted) {
-                                messenger.showSnackBar(SnackBar(
+                  const SizedBox(height: 16),
+                  ElevatedButton(onPressed: _refresh, child: Text(l10n.retry)),
+                ],
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: _refresh,
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.only(bottom: 88),
+                children: [
+                  _DashboardHeader(
+                    houseName: houseProvider.activeHouseName,
+                    userName: authService.currentUserName,
+                  ),
+                  if (chores.isEmpty)
+                    _EmptyDashboard(
+                      isAdmin: authService.isCurrentUserAdmin,
+                      onAddChore: () async {
+                        final result = await Navigator.of(context).push<bool>(
+                          MaterialPageRoute(
+                            builder: (_) => const AddChoreScreen(),
+                          ),
+                        );
+                        if (result == true) await _refresh();
+                      },
+                      onManageUsers: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const UserManagementScreen(),
+                        ),
+                      ),
+                      onConfigureHouse: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const ConfigurationScreen(),
+                        ),
+                      ),
+                    )
+                  else ...[
+                    _DashboardStats(
+                      assignedToMe: assignedToMe,
+                      needsAttention: needsAttention,
+                      critical: critical,
+                      total: chores.length,
+                    ),
+                    _WorkloadFilterBar(
+                      selected: _workloadFilter,
+                      onSelected: (filter) {
+                        setState(() => _workloadFilter = filter);
+                      },
+                    ),
+                    if (visibleChores.isEmpty)
+                      const _FilteredEmptyState()
+                    else
+                      ...visibleChores.map((chore) {
+                        final due =
+                            provider.dueDate(chore.id) ?? DateTime.now();
+                        final maxDue =
+                            provider.maxDueDate(chore.id) ?? DateTime.now();
+                        return ChoreListTile(
+                          chore: chore,
+                          dueDate: due,
+                          maxDueDate: maxDue,
+                          currentUserId: currentUserId,
+                          onTap: () async {
+                            final messenger = ScaffoldMessenger.of(context);
+                            final msg = AppLocalizations.of(
+                              context,
+                            )!.taskCompleted;
+                            final result = await Navigator.of(context)
+                                .push<bool>(
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        CompleteChoreScreen(chore: chore),
+                                  ),
+                                );
+                            if (result == true && mounted) {
+                              messenger.showSnackBar(
+                                SnackBar(
                                   content: Text(msg),
                                   backgroundColor: Colors.green,
-                                ));
-                              }
-                            },
-                            onEdit: () async {
-                              final result =
-                                  await Navigator.of(context).push<bool>(
-                                MaterialPageRoute(
-                                  builder: (_) => AddChoreScreen(chore: chore),
                                 ),
                               );
-                              if (result == true && mounted) await _refresh();
-                            },
-                            onDelete: () => _confirmDelete(chore),
-                            onHistory: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    ChoreHistoryScreen(chore: chore),
-                              ),
+                            }
+                          },
+                          onEdit: () async {
+                            final result = await Navigator.of(context)
+                                .push<bool>(
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        AddChoreScreen(chore: chore),
+                                  ),
+                                );
+                            if (result == true && mounted) await _refresh();
+                          },
+                          onDelete: () => _confirmDelete(chore),
+                          onHistory: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => ChoreHistoryScreen(chore: chore),
                             ),
-                          );
-                        },
-                      ),
+                          ),
+                        );
+                      }),
+                  ],
+                ],
+              ),
+            ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+
+class _DashboardHeader extends StatelessWidget {
+  const _DashboardHeader({required this.houseName, required this.userName});
+
+  final String houseName;
+  final String? userName;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final subtitle = userName == null
+        ? l10n.dashboardSubtitleNoUser(houseName)
+        : l10n.dashboardSubtitle(houseName, userName!);
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.teal.shade700, Colors.blueGrey.shade700],
+        ),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.home_work_outlined, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l10n.dashboardOverview,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            subtitle,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: Colors.white.withValues(alpha: 0.88),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DashboardStats extends StatelessWidget {
+  const _DashboardStats({
+    required this.assignedToMe,
+    required this.needsAttention,
+    required this.critical,
+    required this.total,
+  });
+
+  final int assignedToMe;
+  final int needsAttention;
+  final int critical;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isNarrow = constraints.maxWidth < 560;
+          return GridView.count(
+            crossAxisCount: isNarrow ? 2 : 4,
+            childAspectRatio: isNarrow ? 2.7 : 2.4,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+            children: [
+              _StatTile(
+                icon: Icons.person_pin_circle_outlined,
+                color: Colors.teal,
+                label: l10n.assignedToMe,
+                value: assignedToMe,
+              ),
+              _StatTile(
+                icon: Icons.priority_high,
+                color: Colors.orange,
+                label: l10n.needsAttention,
+                value: needsAttention,
+              ),
+              _StatTile(
+                icon: Icons.warning_amber_rounded,
+                color: Colors.red,
+                label: l10n.critical,
+                value: critical,
+              ),
+              _StatTile(
+                icon: Icons.inventory_2_outlined,
+                color: Colors.indigo,
+                label: l10n.totalChores,
+                value: total,
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _StatTile extends StatelessWidget {
+  const _StatTile({
+    required this.icon,
+    required this.color,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final MaterialColor color;
+  final String label;
+  final int value;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.shade50,
+        border: Border.all(color: color.shade100),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
+          children: [
+            Icon(icon, color: color.shade700),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    value.toString(),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      height: 1,
                     ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WorkloadFilterBar extends StatelessWidget {
+  const _WorkloadFilterBar({required this.selected, required this.onSelected});
+
+  final _DashboardFilter selected;
+  final ValueChanged<_DashboardFilter> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      child: SegmentedButton<_DashboardFilter>(
+        segments: [
+          ButtonSegment(
+            value: _DashboardFilter.all,
+            icon: const Icon(Icons.list_alt),
+            label: Text(l10n.filterAll),
+          ),
+          ButtonSegment(
+            value: _DashboardFilter.mine,
+            icon: const Icon(Icons.person),
+            label: Text(l10n.filterMine),
+          ),
+          ButtonSegment(
+            value: _DashboardFilter.attention,
+            icon: const Icon(Icons.flag_outlined),
+            label: Text(l10n.filterNeedsAttention),
+          ),
+          ButtonSegment(
+            value: _DashboardFilter.critical,
+            icon: const Icon(Icons.warning_amber_rounded),
+            label: Text(l10n.filterCritical),
+          ),
+        ],
+        selected: {selected},
+        onSelectionChanged: (selection) => onSelected(selection.first),
+      ),
+    );
+  }
+}
+
+class _EmptyDashboard extends StatelessWidget {
+  const _EmptyDashboard({
+    required this.isAdmin,
+    required this.onAddChore,
+    required this.onManageUsers,
+    required this.onConfigureHouse,
+  });
+
+  final bool isAdmin;
+  final VoidCallback onAddChore;
+  final VoidCallback onManageUsers;
+  final VoidCallback onConfigureHouse;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: Colors.blueGrey.shade100),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.checklist_rtl, size: 42, color: Colors.teal.shade700),
+              const SizedBox(height: 12),
+              Text(
+                l10n.gettingStartedTitle,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(l10n.gettingStartedBody),
+              const SizedBox(height: 18),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  FilledButton.icon(
+                    onPressed: onAddChore,
+                    icon: const Icon(Icons.add_task),
+                    label: Text(l10n.addFirstChore),
+                  ),
+                  if (isAdmin)
+                    OutlinedButton.icon(
+                      onPressed: onManageUsers,
+                      icon: const Icon(Icons.group_add),
+                      label: Text(l10n.manageUsers),
+                    ),
+                  OutlinedButton.icon(
+                    onPressed: onConfigureHouse,
+                    icon: const Icon(Icons.settings),
+                    label: Text(l10n.configureHouse),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              _GuideRow(
+                icon: Icons.add_task,
+                color: Colors.teal,
+                title: l10n.gettingStartedAddChoreTitle,
+                body: l10n.gettingStartedAddChoreBody,
+              ),
+              _GuideRow(
+                icon: Icons.group,
+                color: Colors.indigo,
+                title: l10n.gettingStartedUsersTitle,
+                body: l10n.gettingStartedUsersBody,
+              ),
+              _GuideRow(
+                icon: Icons.done_all,
+                color: Colors.green,
+                title: l10n.gettingStartedCompleteTitle,
+                body: l10n.gettingStartedCompleteBody,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GuideRow extends StatelessWidget {
+  const _GuideRow({
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.body,
+  });
+
+  final IconData icon;
+  final MaterialColor color;
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: color.shade50,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: color.shade700, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 2),
+                Text(body, style: Theme.of(context).textTheme.bodySmall),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FilteredEmptyState extends StatelessWidget {
+  const _FilteredEmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 36, 24, 24),
+      child: Column(
+        children: [
+          Icon(Icons.task_alt, size: 44, color: Colors.green.shade700),
+          const SizedBox(height: 12),
+          Text(
+            l10n.noFilteredChoresTitle,
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.noFilteredChoresBody,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -310,11 +966,16 @@ class _SeasonFilterBar extends StatelessWidget {
 
   String _label(AppLocalizations l10n, String season) {
     switch (season) {
-      case 'Spring': return l10n.spring;
-      case 'Summer': return l10n.summer;
-      case 'Autumn': return l10n.autumn;
-      case 'Winter': return l10n.winter;
-      default:       return l10n.allSeasons;
+      case 'Spring':
+        return l10n.spring;
+      case 'Summer':
+        return l10n.summer;
+      case 'Autumn':
+        return l10n.autumn;
+      case 'Winter':
+        return l10n.winter;
+      default:
+        return l10n.allSeasons;
     }
   }
 
@@ -337,16 +998,17 @@ class _SeasonFilterBar extends StatelessWidget {
           ),
           ...AppConstants.seasons
               .where((s) => s != 'All')
-              .map((season) => Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: FilterChip(
-                      label: Text(_label(l10n, season)),
-                      selected: activeFilter == season,
-                      onSelected: (_) => onFilterChanged(
-                        activeFilter == season ? null : season,
-                      ),
-                    ),
-                  )),
+              .map(
+                (season) => Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilterChip(
+                    label: Text(_label(l10n, season)),
+                    selected: activeFilter == season,
+                    onSelected: (_) =>
+                        onFilterChanged(activeFilter == season ? null : season),
+                  ),
+                ),
+              ),
         ],
       ),
     );

@@ -1,11 +1,9 @@
 services:
   pocketbase:
     build:
-      # Both services use the repo root as context — avoids a Docker Desktop
-      # on Windows bug where BuildKit fails to resolve dockerfile paths when
-      # services have different contexts.
       context: .
       dockerfile: Dockerfile
+      target: pocketbase
     container_name: householdchores-backend
     restart: unless-stopped
     ports:
@@ -13,7 +11,6 @@ services:
     env_file:
       - ./backend/.env
     volumes:
-      # pb_data is a bind mount — your database survives any rebuild or update
       - ./backend/pb_data:/pb/pb_data
       - ./backend/pb_migrations:/pb/pb_migrations
       - ./backend/pb_hooks:/pb/pb_hooks
@@ -27,6 +24,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: web
     container_name: householdchores-web
     restart: unless-stopped
     ports:

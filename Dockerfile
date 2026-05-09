@@ -1,39 +1,41 @@
-# ============================================================
-# Stage 1 — Build the Flutter web app
-# ============================================================
-# Uses the official cirruslabs Flutter image.
-# Pin to a specific tag for reproducible builds, e.g.:
-#   ghcr.io/cirruslabs/flutter:3.29.0
-FROM ghcr.io/cirruslabs/flutter:stable AS builder
+FROM ghcr.io/cirruslabs/flutter:stable AS web-builder
 
 WORKDIR /app
 
 # Copy dependency manifests first so Docker can cache the pub get layer.
-# This layer is only invalidated when pubspec files change.
 COPY frontend/pubspec.yaml frontend/pubspec.lock ./
 RUN flutter pub get
 
-# Copy the rest of the source.
-# .dockerignore excludes .dart_tool/ so package_config.json is
-# freshly generated above with correct Linux paths — not copied
-# from the Windows host where it contains C:\Users\... paths.
+# Copy the rest of the frontend source and generate localizations.
 COPY frontend/ .
-
-# Explicitly generate l10n files before building.
-# The generated app_localizations*.dart files are excluded by
-# .dockerignore so this always produces a clean Linux build.
 RUN flutter gen-l10n
 
-# Build the release web app
+# Build the release web app.
 RUN flutter build web --release
 
-# ============================================================
-# Stage 2 — Serve with nginx
-# ============================================================
-FROM nginx:alpine
+FROM nginx:alpine AS web
 
-# Files are owned by root inside the image — no permission issues.
-COPY --from=builder /app/build/web /usr/share/nginx/html
+COPY --from=web-builder /app/build/web /usr/share/nginx/html
 COPY backend/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
+
+FROM alpine:latest AS pocketbase
+
+ARG PB_VERSION=0.38.0
+
+RUN apk add --no-cache \
+    ca-certificates \
+    unzip
+
+ADD https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/pocketbase_${PB_VERSION}_linux_amd64.zip /tmp/pocketbase.zip
+RUN unzip /tmp/pocketbase.zip -d /pb/ && rm /tmp/pocketbase.zip
+
+WORKDIR /pb
+
+COPY backend/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+EXPOSE 9010
+
+ENTRYPOINT ["/entrypoint.sh"]

@@ -483,5 +483,93 @@ class AppLocalizationsEs extends AppLocalizations {
   String get youLabel => 'tu';
 
   @override
+  String get dashboardOverview => 'Hoy en casa';
+
+  @override
+  String dashboardSubtitle(String houseName, String userName) {
+    return '$houseName esta activo. Sesion iniciada como $userName.';
+  }
+
+  @override
+  String dashboardSubtitleNoUser(String houseName) {
+    return '$houseName esta activo.';
+  }
+
+  @override
+  String get assignedToMe => 'Asignadas a mi';
+
+  @override
+  String get needsAttention => 'Necesitan atencion';
+
+  @override
+  String get critical => 'Criticas';
+
+  @override
+  String get totalChores => 'Total de tareas';
+
+  @override
+  String get filterAll => 'Todas';
+
+  @override
+  String get filterMine => 'Mias';
+
+  @override
+  String get filterNeedsAttention => 'Atencion';
+
+  @override
+  String get filterCritical => 'Criticas';
+
+  @override
+  String get gettingStartedTitle => 'Empieza con tu primera rutina';
+
+  @override
+  String get gettingStartedBody =>
+      'Anade una tarea, elige cada cuanto debe hacerse y asignala a alguien. Cuando se completa, el panel calcula automaticamente la siguiente fecha.';
+
+  @override
+  String get addFirstChore => 'Anadir primera tarea';
+
+  @override
+  String get configureHouse => 'Configurar hogar';
+
+  @override
+  String get gettingStartedAddChoreTitle => 'Crea tareas practicas';
+
+  @override
+  String get gettingStartedAddChoreBody =>
+      'Usa nombres claros, intervalos normales, fechas limite y ajustes por temporada para trabajos que cambian durante el ano.';
+
+  @override
+  String get gettingStartedUsersTitle => 'Anade miembros del hogar';
+
+  @override
+  String get gettingStartedUsersBody =>
+      'Los admins pueden anadir usuarios, asignar admins y definir responsables recurrentes para que cada persona vea lo suyo.';
+
+  @override
+  String get gettingStartedCompleteTitle => 'Toca una tarea para completarla';
+
+  @override
+  String get gettingStartedCompleteBody =>
+      'Puedes marcar una tarea como hecha, anadir notas o fotos y completarla en nombre de otra persona si hace falta.';
+
+  @override
+  String get dashboardHelpTitle => 'Como funciona este panel';
+
+  @override
+  String get dashboardHelpFiltersTitle => 'Usa filtros para enfocarte';
+
+  @override
+  String get dashboardHelpFiltersBody =>
+      'Mias muestra tus tareas, Atencion muestra tareas vencidas o para hoy, y Criticas muestra tareas que pasaron el plazo maximo.';
+
+  @override
+  String get noFilteredChoresTitle => 'Nada en esta vista';
+
+  @override
+  String get noFilteredChoresBody =>
+      'Prueba otro filtro o temporada, o disfruta por un momento de una lista vacia.';
+
+  @override
   String get completedBy => 'Completado por';
 }

@@ -1,17 +1,78 @@
-# frontend
+# Household Chores Frontend
 
-A new Flutter project.
+This is the Flutter app for Household Chores Manager. It builds for web, Android, iOS, and desktop, although the Docker deployment builds the web version automatically.
 
-## Getting Started
+Most users do not need to run commands in this folder. Use the root `README.md` first.
 
-This project is a starting point for a Flutter application.
+## Common Developer Commands
 
-A few resources to get you started if this is your first Flutter project:
+Run these from the `frontend` folder:
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+```powershell
+flutter pub get
+flutter analyze
+flutter test
+flutter gen-l10n
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Run the app locally in Chrome:
+
+```powershell
+flutter run -d chrome
+```
+
+The web app connects to `http://localhost:9010` by default when running locally.
+
+## Mobile Notifications
+
+Android and iOS use `flutter_local_notifications` for local scheduled reminders.
+
+Important behavior:
+
+- Web builds skip local notification scheduling.
+- Android needs notification permission on recent Android versions.
+- iOS asks for alert, badge, and sound permission.
+- Notification schedules are refreshed when chores sync.
+- Supported notifications can show a **Complete** action that opens the app and completes the chore.
+
+## Localization
+
+The app uses Flutter generated localizations.
+
+Source files:
+
+```text
+lib/l10n/app_en.arb
+lib/l10n/app_nl.arb
+lib/l10n/app_es.arb
+```
+
+After editing ARB files, run:
+
+```powershell
+flutter gen-l10n
+```
+
+## Build Web
+
+```powershell
+flutter build web --release
+```
+
+Docker does this automatically from the project root:
+
+```powershell
+docker compose up -d --build
+```
+
+## Build Android APK
+
+```powershell
+flutter build apk --release
+```
+
+Output:
+
+```text
+build/app/outputs/flutter-apk/
+```

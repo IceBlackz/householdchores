@@ -25,21 +25,17 @@ class ConnectionValidator {
       }
 
       // Check 2: Server is reachable
-      final response = await _checkServerReachability(uri, timeoutMs: timeoutMs);
-      if (!response) {
+      final isReachable = await _checkServerReachability(
+        uri,
+        timeoutMs: timeoutMs,
+        retryLimit: retryLimit,
+      );
+      if (!isReachable) {
         return false;
       }
 
-      // Check 3: Server has householdchores-specific collections
-      final collections = await _checkCollections(uri, timeoutMs: timeoutMs);
-      if (collections == null) {
-        return false;
-      }
-
-      // Check 4: Server has the required collections (chores, users, chore_logs)
-      final requiredCollections = ['chores', 'users', 'chore_logs'];
-      final missingCollections = requiredCollections.where((c) => !collections.contains(c));
-      if (missingCollections.isNotEmpty) {
+      // Check 3: Server exposes the app-specific version endpoint.
+      if (!await _checkVersionEndpoint(uri, timeoutMs: timeoutMs)) {
         return false;
       }
 
@@ -55,53 +51,69 @@ class ConnectionValidator {
   static Future<bool> _checkServerReachability(
     Uri uri, {
     int timeoutMs = defaultTimeout,
+    int retryLimit = defaultRetryLimit,
   }) async {
-    for (int attempt = 0; attempt <= defaultRetryLimit; attempt++) {
-      try {
-        final client = http.Client();
-        final response = await client
-            .get(uri)
-            .timeout(Duration(milliseconds: timeoutMs));
-        client.close();
+    final healthUri = _buildEndpointUri(uri, 'api/health');
 
-        // PocketBase returns 200 for valid servers
+    for (int attempt = 0; attempt <= retryLimit; attempt++) {
+      final client = http.Client();
+      try {
+        final response = await client
+            .get(healthUri)
+            .timeout(Duration(milliseconds: timeoutMs));
+
+        // PocketBase health endpoint returns 200 for healthy servers.
         return response.statusCode == 200;
-      } catch (e) {
-        if (attempt == defaultRetryLimit) {
+      } catch (_) {
+        if (attempt == retryLimit) {
           return false;
         }
         // Retry on network errors
         await Future.delayed(Duration(milliseconds: timeoutMs ~/ 2));
+      } finally {
+        client.close();
       }
     }
     return false;
   }
 
-  /// Checks if the server has householdchores-specific collections.
-  /// Returns null if the server is not a householdchores server.
-  static Future<List<String>?> _checkCollections(
+  /// Checks whether the app-specific version endpoint is exposed.
+  static Future<bool> _checkVersionEndpoint(
     Uri uri, {
     int timeoutMs = defaultTimeout,
   }) async {
+    final client = http.Client();
     try {
-      final client = http.Client();
+      final versionUri = _buildEndpointUri(uri, 'api/householdchores/version');
       final response = await client
-          .get(Uri.parse('${uri.toString()}/api/collections'))
+          .get(versionUri)
           .timeout(Duration(milliseconds: timeoutMs));
-      client.close();
 
       if (response.statusCode != 200) {
-        return null;
+        return false;
       }
 
-      final collections = jsonDecode(response.body) as List<dynamic>;
-      return collections
-          .map((c) => c['name'] as String)
-          .where((name) => name != '_pb_users_auth_')
-          .toList();
-    } catch (e) {
-      return null;
+      final body = jsonDecode(response.body);
+      return body is Map<String, dynamic> &&
+          (body['version'] as String?)?.isNotEmpty == true;
+    } catch (_) {
+      return false;
+    } finally {
+      client.close();
     }
+  }
+
+  static Uri _buildEndpointUri(Uri baseUri, String endpointPath) {
+    final pathSegments = [
+      ...baseUri.pathSegments.where((segment) => segment.isNotEmpty),
+      ...endpointPath.split('/').where((segment) => segment.isNotEmpty),
+    ];
+
+    return baseUri.replace(
+      path: '/${pathSegments.join('/')}',
+      query: null,
+      fragment: null,
+    );
   }
 
   /// Gets a validation error message for a given error.

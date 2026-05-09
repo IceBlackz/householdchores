@@ -25,6 +25,7 @@ class Collections {
   static const String users = 'users';
   static const String chores = 'chores';
   static const String choreLogs = 'chore_logs';
+  static const String appSettings = 'app_settings';
 }
 
 /// Allowed values for the chore interval_unit field.
@@ -39,11 +40,16 @@ class IntervalUnits {
 
   static String label(String unit) {
     switch (unit) {
-      case weeks:    return 'Weeks';
-      case months:   return 'Months';
-      case quarters: return 'Quarters';
-      case years:    return 'Years';
-      default:       return 'Days';
+      case weeks:
+        return 'Weeks';
+      case months:
+        return 'Months';
+      case quarters:
+        return 'Quarters';
+      case years:
+        return 'Years';
+      default:
+        return 'Days';
     }
   }
 }

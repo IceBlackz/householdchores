@@ -946,6 +946,162 @@ abstract class AppLocalizations {
   /// **'you'**
   String get youLabel;
 
+  /// No description provided for @dashboardOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Today at home'**
+  String get dashboardOverview;
+
+  /// No description provided for @dashboardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{houseName} is active. Signed in as {userName}.'**
+  String dashboardSubtitle(String houseName, String userName);
+
+  /// No description provided for @dashboardSubtitleNoUser.
+  ///
+  /// In en, this message translates to:
+  /// **'{houseName} is active.'**
+  String dashboardSubtitleNoUser(String houseName);
+
+  /// No description provided for @assignedToMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned to me'**
+  String get assignedToMe;
+
+  /// No description provided for @needsAttention.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs attention'**
+  String get needsAttention;
+
+  /// No description provided for @critical.
+  ///
+  /// In en, this message translates to:
+  /// **'Critical'**
+  String get critical;
+
+  /// No description provided for @totalChores.
+  ///
+  /// In en, this message translates to:
+  /// **'Total chores'**
+  String get totalChores;
+
+  /// No description provided for @filterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get filterAll;
+
+  /// No description provided for @filterMine.
+  ///
+  /// In en, this message translates to:
+  /// **'Mine'**
+  String get filterMine;
+
+  /// No description provided for @filterNeedsAttention.
+  ///
+  /// In en, this message translates to:
+  /// **'Attention'**
+  String get filterNeedsAttention;
+
+  /// No description provided for @filterCritical.
+  ///
+  /// In en, this message translates to:
+  /// **'Critical'**
+  String get filterCritical;
+
+  /// No description provided for @gettingStartedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with your first routine'**
+  String get gettingStartedTitle;
+
+  /// No description provided for @gettingStartedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a chore, choose how often it should happen, and assign it to someone. Once it is completed, the dashboard automatically schedules the next due date.'**
+  String get gettingStartedBody;
+
+  /// No description provided for @addFirstChore.
+  ///
+  /// In en, this message translates to:
+  /// **'Add first chore'**
+  String get addFirstChore;
+
+  /// No description provided for @configureHouse.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure house'**
+  String get configureHouse;
+
+  /// No description provided for @gettingStartedAddChoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create practical chores'**
+  String get gettingStartedAddChoreTitle;
+
+  /// No description provided for @gettingStartedAddChoreBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Use clear names, normal intervals, hard deadlines, and optional seasonal overrides for jobs that change through the year.'**
+  String get gettingStartedAddChoreBody;
+
+  /// No description provided for @gettingStartedUsersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add household members'**
+  String get gettingStartedUsersTitle;
+
+  /// No description provided for @gettingStartedUsersBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Admins can add users, set admins, and assign recurring ownership so everyone sees what belongs to them.'**
+  String get gettingStartedUsersBody;
+
+  /// No description provided for @gettingStartedCompleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a chore to complete it'**
+  String get gettingStartedCompleteTitle;
+
+  /// No description provided for @gettingStartedCompleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You can mark a chore done, add notes or photos, and complete it on behalf of someone else when needed.'**
+  String get gettingStartedCompleteBody;
+
+  /// No description provided for @dashboardHelpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How this dashboard works'**
+  String get dashboardHelpTitle;
+
+  /// No description provided for @dashboardHelpFiltersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use filters to focus'**
+  String get dashboardHelpFiltersTitle;
+
+  /// No description provided for @dashboardHelpFiltersBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Mine shows your assigned work, Attention shows due or overdue chores, and Critical shows chores past the hard deadline.'**
+  String get dashboardHelpFiltersBody;
+
+  /// No description provided for @noFilteredChoresTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing in this view'**
+  String get noFilteredChoresTitle;
+
+  /// No description provided for @noFilteredChoresBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another filter or season, or enjoy the rare peace of an empty list.'**
+  String get noFilteredChoresBody;
+
   /// No description provided for @completedBy.
   ///
   /// In en, this message translates to:

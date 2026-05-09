@@ -481,5 +481,93 @@ class AppLocalizationsEn extends AppLocalizations {
   String get youLabel => 'you';
 
   @override
+  String get dashboardOverview => 'Today at home';
+
+  @override
+  String dashboardSubtitle(String houseName, String userName) {
+    return '$houseName is active. Signed in as $userName.';
+  }
+
+  @override
+  String dashboardSubtitleNoUser(String houseName) {
+    return '$houseName is active.';
+  }
+
+  @override
+  String get assignedToMe => 'Assigned to me';
+
+  @override
+  String get needsAttention => 'Needs attention';
+
+  @override
+  String get critical => 'Critical';
+
+  @override
+  String get totalChores => 'Total chores';
+
+  @override
+  String get filterAll => 'All';
+
+  @override
+  String get filterMine => 'Mine';
+
+  @override
+  String get filterNeedsAttention => 'Attention';
+
+  @override
+  String get filterCritical => 'Critical';
+
+  @override
+  String get gettingStartedTitle => 'Start with your first routine';
+
+  @override
+  String get gettingStartedBody =>
+      'Add a chore, choose how often it should happen, and assign it to someone. Once it is completed, the dashboard automatically schedules the next due date.';
+
+  @override
+  String get addFirstChore => 'Add first chore';
+
+  @override
+  String get configureHouse => 'Configure house';
+
+  @override
+  String get gettingStartedAddChoreTitle => 'Create practical chores';
+
+  @override
+  String get gettingStartedAddChoreBody =>
+      'Use clear names, normal intervals, hard deadlines, and optional seasonal overrides for jobs that change through the year.';
+
+  @override
+  String get gettingStartedUsersTitle => 'Add household members';
+
+  @override
+  String get gettingStartedUsersBody =>
+      'Admins can add users, set admins, and assign recurring ownership so everyone sees what belongs to them.';
+
+  @override
+  String get gettingStartedCompleteTitle => 'Tap a chore to complete it';
+
+  @override
+  String get gettingStartedCompleteBody =>
+      'You can mark a chore done, add notes or photos, and complete it on behalf of someone else when needed.';
+
+  @override
+  String get dashboardHelpTitle => 'How this dashboard works';
+
+  @override
+  String get dashboardHelpFiltersTitle => 'Use filters to focus';
+
+  @override
+  String get dashboardHelpFiltersBody =>
+      'Mine shows your assigned work, Attention shows due or overdue chores, and Critical shows chores past the hard deadline.';
+
+  @override
+  String get noFilteredChoresTitle => 'Nothing in this view';
+
+  @override
+  String get noFilteredChoresBody =>
+      'Try another filter or season, or enjoy the rare peace of an empty list.';
+
+  @override
   String get completedBy => 'Completed by';
 }

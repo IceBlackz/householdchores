@@ -28,11 +28,15 @@ class ChoreProvider extends ChangeNotifier {
 
   List<Chore> get chores {
     if (_seasonFilter == null) return _chores;
-    return _chores.where((c) => c.season == 'All' || c.season == _seasonFilter).toList();
+    return _chores
+        .where((c) => c.season == 'All' || c.season == _seasonFilter)
+        .toList();
   }
 
   DateTime? dueDate(String choreId) => _dueDates[choreId];
   DateTime? maxDueDate(String choreId) => _maxDueDates[choreId];
+  Map<String, DateTime> get dueDates => Map.unmodifiable(_dueDates);
+  Map<String, DateTime> get maxDueDates => Map.unmodifiable(_maxDueDates);
 
   void setSeasonFilter(String? season) {
     _seasonFilter = season;
@@ -51,8 +55,12 @@ class ChoreProvider extends ChangeNotifier {
     _currentUserId = userId;
     await _cancelSubscriptions();
     final pb = PocketBaseService().client;
-    _unsubscribeChores = await pb.collection(Collections.chores).subscribe('*', _onRealtimeEvent);
-    _unsubscribeLogs = await pb.collection(Collections.choreLogs).subscribe('*', _onRealtimeEvent);
+    _unsubscribeChores = await pb
+        .collection(Collections.chores)
+        .subscribe('*', _onRealtimeEvent);
+    _unsubscribeLogs = await pb
+        .collection(Collections.choreLogs)
+        .subscribe('*', _onRealtimeEvent);
   }
 
   void _onRealtimeEvent(RecordSubscriptionEvent event) {
@@ -94,11 +102,15 @@ class ChoreProvider extends ChangeNotifier {
       for (final chore in chores) {
         final latestLog = latestLogs[chore.id];
         if (latestLog != null) {
-          dueDates[chore.id] = chore.nextDueDate(latestLog.created, activeSeason);
+          dueDates[chore.id] = chore.nextDueDate(
+            latestLog.created,
+            activeSeason,
+          );
           maxDueDates[chore.id] = chore.maxDueDate(latestLog.created);
         } else {
-          final sentinel = DateTime.now()
-              .subtract(Duration(days: AppConstants.neverCompletedSentinelDays));
+          final sentinel = DateTime.now().subtract(
+            Duration(days: AppConstants.neverCompletedSentinelDays),
+          );
           dueDates[chore.id] = sentinel;
           maxDueDates[chore.id] = sentinel;
         }

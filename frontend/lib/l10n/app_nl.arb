@@ -227,5 +227,42 @@
   "cannotDeleteSelf": "Je kunt je eigen account niet verwijderen",
   "noUsersFound": "Geen gebruikers gevonden",
   "youLabel": "jij",
+  "dashboardOverview": "Vandaag thuis",
+  "dashboardSubtitle": "{houseName} is actief. Ingelogd als {userName}.",
+  "@dashboardSubtitle": {
+    "placeholders": {
+      "houseName": { "type": "String" },
+      "userName": { "type": "String" }
+    }
+  },
+  "dashboardSubtitleNoUser": "{houseName} is actief.",
+  "@dashboardSubtitleNoUser": {
+    "placeholders": {
+      "houseName": { "type": "String" }
+    }
+  },
+  "assignedToMe": "Aan mij toegewezen",
+  "needsAttention": "Heeft aandacht nodig",
+  "critical": "Kritiek",
+  "totalChores": "Totaal taken",
+  "filterAll": "Alles",
+  "filterMine": "Van mij",
+  "filterNeedsAttention": "Aandacht",
+  "filterCritical": "Kritiek",
+  "gettingStartedTitle": "Begin met je eerste routine",
+  "gettingStartedBody": "Voeg een taak toe, kies hoe vaak die moet gebeuren en wijs hem aan iemand toe. Na voltooiing plant het dashboard automatisch de volgende datum.",
+  "addFirstChore": "Eerste taak toevoegen",
+  "configureHouse": "Huis configureren",
+  "gettingStartedAddChoreTitle": "Maak praktische taken",
+  "gettingStartedAddChoreBody": "Gebruik duidelijke namen, normale intervallen, harde deadlines en optionele seizoensinstellingen voor klussen die per seizoen veranderen.",
+  "gettingStartedUsersTitle": "Voeg huisgenoten toe",
+  "gettingStartedUsersBody": "Beheerders kunnen gebruikers toevoegen, beheerders instellen en vaste eigenaars toewijzen zodat iedereen ziet wat van hen is.",
+  "gettingStartedCompleteTitle": "Tik op een taak om af te ronden",
+  "gettingStartedCompleteBody": "Je kunt een taak voltooien, notities of foto's toevoegen en hem indien nodig namens iemand anders afronden.",
+  "dashboardHelpTitle": "Zo werkt dit dashboard",
+  "dashboardHelpFiltersTitle": "Gebruik filters voor focus",
+  "dashboardHelpFiltersBody": "Van mij toont jouw taken, Aandacht toont taken die nu moeten of te laat zijn, en Kritiek toont taken voorbij de harde deadline.",
+  "noFilteredChoresTitle": "Niets in deze weergave",
+  "noFilteredChoresBody": "Probeer een ander filter of seizoen, of geniet even van een lege lijst.",
   "completedBy": "Voltooid door"
 }

@@ -227,5 +227,42 @@
   "cannotDeleteSelf": "You cannot delete your own account",
   "noUsersFound": "No users found",
   "youLabel": "you",
+  "dashboardOverview": "Today at home",
+  "dashboardSubtitle": "{houseName} is active. Signed in as {userName}.",
+  "@dashboardSubtitle": {
+    "placeholders": {
+      "houseName": { "type": "String" },
+      "userName": { "type": "String" }
+    }
+  },
+  "dashboardSubtitleNoUser": "{houseName} is active.",
+  "@dashboardSubtitleNoUser": {
+    "placeholders": {
+      "houseName": { "type": "String" }
+    }
+  },
+  "assignedToMe": "Assigned to me",
+  "needsAttention": "Needs attention",
+  "critical": "Critical",
+  "totalChores": "Total chores",
+  "filterAll": "All",
+  "filterMine": "Mine",
+  "filterNeedsAttention": "Attention",
+  "filterCritical": "Critical",
+  "gettingStartedTitle": "Start with your first routine",
+  "gettingStartedBody": "Add a chore, choose how often it should happen, and assign it to someone. Once it is completed, the dashboard automatically schedules the next due date.",
+  "addFirstChore": "Add first chore",
+  "configureHouse": "Configure house",
+  "gettingStartedAddChoreTitle": "Create practical chores",
+  "gettingStartedAddChoreBody": "Use clear names, normal intervals, hard deadlines, and optional seasonal overrides for jobs that change through the year.",
+  "gettingStartedUsersTitle": "Add household members",
+  "gettingStartedUsersBody": "Admins can add users, set admins, and assign recurring ownership so everyone sees what belongs to them.",
+  "gettingStartedCompleteTitle": "Tap a chore to complete it",
+  "gettingStartedCompleteBody": "You can mark a chore done, add notes or photos, and complete it on behalf of someone else when needed.",
+  "dashboardHelpTitle": "How this dashboard works",
+  "dashboardHelpFiltersTitle": "Use filters to focus",
+  "dashboardHelpFiltersBody": "Mine shows your assigned work, Attention shows due or overdue chores, and Critical shows chores past the hard deadline.",
+  "noFilteredChoresTitle": "Nothing in this view",
+  "noFilteredChoresBody": "Try another filter or season, or enjoy the rare peace of an empty list.",
   "completedBy": "Completed by"
 }

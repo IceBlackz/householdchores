@@ -3,10 +3,14 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_config.dart';
 import '../models/house.dart';
+import '../services/pocketbase_service.dart';
 
 /// Provider for managing multiple PocketBase server configurations (houses).
 /// Handles adding, editing, deleting houses and switching between them.
 class HouseProvider extends ChangeNotifier {
+  static const _housesStorageKey = 'houses';
+  static const _activeHouseIdStorageKey = 'active_house_id';
+
   final List<House> _houses = [];
   String? _activeHouseId;
 
@@ -25,7 +29,8 @@ class HouseProvider extends ChangeNotifier {
 
   Future<void> _loadHouses() async {
     final prefs = await SharedPreferences.getInstance();
-    final housesJson = prefs.getStringList('houses') ?? [];
+    final housesJson = prefs.getStringList(_housesStorageKey) ?? [];
+    _activeHouseId = prefs.getString(_activeHouseIdStorageKey);
 
     _houses.clear();
     for (final json in housesJson) {
@@ -47,13 +52,20 @@ class HouseProvider extends ChangeNotifier {
       }
     }
 
+    _applyActiveHouse();
     notifyListeners();
   }
 
   Future<void> _saveHouses() async {
     final prefs = await SharedPreferences.getInstance();
     final housesJson = _houses.map((h) => jsonEncode(h.toMap())).toList();
-    await prefs.setStringList('houses', housesJson);
+    await prefs.setStringList(_housesStorageKey, housesJson);
+
+    if (_activeHouseId == null || _activeHouseId!.isEmpty) {
+      await prefs.remove(_activeHouseIdStorageKey);
+    } else {
+      await prefs.setString(_activeHouseIdStorageKey, _activeHouseId!);
+    }
   }
 
   List<House> get houses => List.unmodifiable(_houses);
@@ -68,6 +80,10 @@ class HouseProvider extends ChangeNotifier {
 
   String? get activeHouseId => _activeHouseId;
   bool get hasActiveHouse => _activeHouseId != null && _activeHouseId != '';
+
+  void _applyActiveHouse() {
+    PocketBaseService().setBaseUrl(activeHouseUrl);
+  }
 
   /// Adds a new house and returns its generated ID so the caller
   /// can immediately switchHouse(newId).
@@ -125,6 +141,11 @@ class HouseProvider extends ChangeNotifier {
       url: url ?? house.url,
       haWebhookUrl: haWebhookUrl ?? house.haWebhookUrl,
     );
+
+    if (houseId == _activeHouseId) {
+      _applyActiveHouse();
+    }
+
     await _saveHouses();
     notifyListeners();
   }
@@ -138,12 +159,12 @@ class HouseProvider extends ChangeNotifier {
     if (houseIndex == -1) throw ArgumentError('House not found: $houseId');
 
     _houses.removeAt(houseIndex);
-    await _saveHouses();
-
     if (houseId == _activeHouseId && _houses.isNotEmpty) {
       _activeHouseId = _houses.first.id;
+      _applyActiveHouse();
     }
 
+    await _saveHouses();
     notifyListeners();
   }
 
@@ -152,6 +173,7 @@ class HouseProvider extends ChangeNotifier {
       throw ArgumentError('House not found: $houseId');
     }
     _activeHouseId = houseId;
+    _applyActiveHouse();
     await _saveHouses();
     notifyListeners();
   }
@@ -166,6 +188,7 @@ class HouseProvider extends ChangeNotifier {
       _houses.add(defaultHouse);
     }
     _activeHouseId = defaultHouse.id;
+    _applyActiveHouse();
     await _saveHouses();
     notifyListeners();
   }
@@ -180,6 +203,7 @@ class HouseProvider extends ChangeNotifier {
   Future<void> clearAllHouses() async {
     _houses.clear();
     _activeHouseId = null;
+    PocketBaseService().setBaseUrl(defaultLocalHouseUrl);
     await _saveHouses();
     notifyListeners();
   }
