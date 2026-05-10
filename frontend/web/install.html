@@ -247,6 +247,7 @@
     </section>
   </main>
 
+  <script src="/config.js"></script>
   <script>
     let deferredPrompt;
     const installButton = document.getElementById('installButton');
@@ -266,7 +267,12 @@
     });
 
     const configuredBackend = window.HOUSEHOLDCHORES_CONFIG?.backendUrl;
-    const defaultBackend = `${window.location.protocol}//${window.location.hostname}:9010`;
+    const isLocalDev =
+      window.location.port === '9011' &&
+      ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
+    const defaultBackend = isLocalDev
+      ? `${window.location.protocol}//${window.location.hostname}:9010`
+      : window.location.origin;
     document.getElementById('backendUrl').textContent = configuredBackend || defaultBackend;
   </script>
 </body>
