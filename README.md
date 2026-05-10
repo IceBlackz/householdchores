@@ -31,6 +31,8 @@ The project has two services:
 
 When you open the web app on another device, it automatically connects to the backend on the same machine at port `9010`. For example, if the web app is `http://192.168.1.20:9011`, it talks to `http://192.168.1.20:9010`.
 
+If you use an HTTPS proxy, you can override the backend URL in `frontend/web/config.js` before rebuilding the web container.
+
 ## Before You Start
 
 You need:
@@ -294,9 +296,200 @@ Make sure both ports are reachable:
 - `9011` for the web app.
 - `9010` for the backend API.
 
+## Install the App From the Website
+
+The server includes a friendly install page:
+
+```text
+http://YOUR-SERVER-IP:9011/install.html
+```
+
+Open that page on the device you want to install.
+
+On Android:
+
+- Tap **Install web app** if the button appears.
+- Or open the browser menu and choose **Install app** or **Add to Home screen**.
+- If an APK was published to the server, use **Download Android APK** on the install page.
+
+On iPhone or iPad:
+
+- Open the install page in Safari.
+- Tap the Share button.
+- Choose **Add to Home Screen**.
+
+On desktop:
+
+- Chrome, Edge, and some other browsers may show an install icon in the address bar.
+- You can also use the browser menu and choose **Install Household Chores** when available.
+
+### Why HTTPS Matters
+
+Install prompts and modern web-app features work best over HTTPS. Browsers usually allow `localhost` for testing, but phones and tablets on your home network should use HTTPS for the smoothest install experience.
+
+If you open the web app through HTTPS, the backend API should also be HTTPS. Otherwise the browser can block the app because an HTTPS page is trying to call an HTTP API.
+
+### Simple HTTPS Test With npm
+
+This option is useful for testing the install flow. For regular family use, a trusted certificate through Caddy, Nginx Proxy Manager, Tailscale, or another reverse proxy will be nicer.
+
+1. Install Node.js.
+
+2. Start the normal app first:
+
+```powershell
+docker compose up -d --build
+```
+
+3. Edit `frontend/web/config.js` and set the backend URL to the HTTPS API proxy you will use:
+
+```javascript
+window.HOUSEHOLDCHORES_CONFIG = {
+  backendUrl: "https://YOUR-SERVER-IP:9444",
+};
+```
+
+4. Rebuild the web container:
+
+```powershell
+docker compose up -d --build web
+```
+
+5. Start both HTTPS proxies:
+
+```powershell
+npx local-ssl-proxy --config https-proxy.example.json
+```
+
+This proxies:
+
+- `https://YOUR-SERVER-IP:9443` to the web app on `http://YOUR-SERVER-IP:9011`.
+- `https://YOUR-SERVER-IP:9444` to the backend API on `http://YOUR-SERVER-IP:9010`.
+
+6. Open the HTTPS install page:
+
+```text
+https://YOUR-SERVER-IP:9443/install.html
+```
+
+Your browser or phone may warn about the temporary certificate. For a truly smooth household install, use a trusted certificate instead of a temporary self-signed one.
+
+### HTTPS With Apache
+
+Apache can serve one clean HTTPS address for both the web app and the PocketBase API.
+
+Example final address:
+
+```text
+https://chores.example.com/install.html
+```
+
+In this setup:
+
+- Apache sends normal website traffic to the web container on `http://127.0.0.1:9011`.
+- Apache sends `/api/` and `/_/` traffic to PocketBase on `http://127.0.0.1:9010`.
+- The app can use `https://chores.example.com` as its backend URL because PocketBase is available under the same HTTPS host.
+
+1. Enable the Apache modules:
+
+```bash
+sudo a2enmod ssl proxy proxy_http headers rewrite
+sudo systemctl restart apache2
+```
+
+2. Get a trusted certificate. The most common option is Let's Encrypt:
+
+```bash
+sudo apt install certbot python3-certbot-apache
+sudo certbot --apache -d chores.example.com
+```
+
+3. Edit `frontend/web/config.js` before rebuilding the web container:
+
+```javascript
+window.HOUSEHOLDCHORES_CONFIG = {
+  backendUrl: "https://chores.example.com",
+};
+```
+
+4. Rebuild the web container:
+
+```powershell
+docker compose up -d --build web
+```
+
+5. Use an Apache virtual host like this:
+
+```apache
+<VirtualHost *:80>
+    ServerName chores.example.com
+    Redirect permanent / https://chores.example.com/
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName chores.example.com
+
+    SSLEngine on
+    SSLCertificateFile /etc/letsencrypt/live/chores.example.com/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/chores.example.com/privkey.pem
+
+    ProxyPreserveHost On
+    RequestHeader set X-Forwarded-Proto "https"
+
+    ProxyPass /api/ http://127.0.0.1:9010/api/
+    ProxyPassReverse /api/ http://127.0.0.1:9010/api/
+
+    ProxyPass /_/ http://127.0.0.1:9010/_/
+    ProxyPassReverse /_/ http://127.0.0.1:9010/_/
+
+    ProxyPass / http://127.0.0.1:9011/
+    ProxyPassReverse / http://127.0.0.1:9011/
+</VirtualHost>
+```
+
+6. Reload Apache:
+
+```bash
+sudo apachectl configtest
+sudo systemctl reload apache2
+```
+
+7. Open:
+
+```text
+https://chores.example.com/install.html
+```
+
+The order of the `ProxyPass` rules matters. Keep `/api/` and `/_/` above `/`.
+
+### What Setup Information Carries Over?
+
+For the installed web app, also called the PWA, the setup is almost automatic:
+
+- It opens the same website it was installed from.
+- It uses the same `frontend/web/config.js` backend URL.
+- If Apache serves both web and API from one HTTPS hostname, the app can simply use `https://chores.example.com`.
+- The user should still log in normally. Do not put usernames or passwords in install links.
+
+For the downloaded Android APK, setup is not automatic yet:
+
+- Android does not reliably tell a sideloaded APK which website it was downloaded from.
+- The native app currently uses its built-in default backend URL or whatever the user configures in House Configuration.
+- A future improvement would be a QR code or deep link such as `householdchores://configure?server=https://chores.example.com` that opens the app and pre-fills the server URL.
+
+So: **PWA install is already easy to connect**, but **APK auto-configuration needs a small deep-link onboarding feature**.
+
 ## Android App
 
-The web app is easiest, but Android gives you direct app notifications.
+The web app is easiest, but Android gives you direct app notifications and APK installs.
+
+The install page links to:
+
+```text
+http://YOUR-SERVER-IP:9011/downloads/householdchores-latest.apk
+```
+
+That file exists after a release build copies an APK into `frontend/web/downloads/householdchores-latest.apk` and the web container is rebuilt.
 
 ### Build an APK
 
@@ -320,6 +513,20 @@ For a signed release, use the project release script from the repo root:
 ```powershell
 .\release.ps1 -Version 1.1.0
 ```
+
+The release script also copies the APK to:
+
+```text
+frontend/web/downloads/householdchores-latest.apk
+```
+
+After that, rebuild the web container:
+
+```powershell
+docker compose up -d --build web
+```
+
+Users can then download it from the install page without installing Flutter.
 
 ### Install on Android
 

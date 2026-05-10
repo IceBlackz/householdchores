@@ -16,6 +16,7 @@ import '../admin/user_management_screen.dart';
 import '../configuration/configuration_screen.dart';
 import '../complete_chore/complete_chore_screen.dart';
 import '../history/chore_history_screen.dart';
+import '../install/install_guide_screen.dart';
 import '../login/login_screen.dart';
 import 'widgets/chore_list_tile.dart';
 
@@ -386,6 +387,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             icon: const Icon(Icons.help_outline),
             onPressed: _showGettingStartedSheet,
             tooltip: l10n.dashboardHelpTitle,
+          ),
+          IconButton(
+            icon: const Icon(Icons.install_mobile),
+            tooltip: 'Install app',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const InstallGuideScreen()),
+            ),
           ),
           IconButton(
             icon: const Icon(Icons.logout),

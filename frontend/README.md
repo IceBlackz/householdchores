@@ -23,6 +23,18 @@ flutter run -d chrome
 
 The web app connects to `http://localhost:9010` by default when running locally.
 
+## Web Runtime Config
+
+`web/config.js` can override the backend URL without changing Dart code:
+
+```javascript
+window.HOUSEHOLDCHORES_CONFIG = {
+  backendUrl: "https://your-server:9444",
+};
+```
+
+Leave it empty for the default behavior where the web app uses the same host and backend port `9010`.
+
 ## Mobile Notifications
 
 Android and iOS use `flutter_local_notifications` for local scheduled reminders.
@@ -76,3 +88,11 @@ Output:
 ```text
 build/app/outputs/flutter-apk/
 ```
+
+The root `release.ps1` script also copies the release APK to:
+
+```text
+web/downloads/householdchores-latest.apk
+```
+
+That file is served by the web container after rebuilding Docker.

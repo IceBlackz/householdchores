@@ -1,0 +1,10 @@
+{
+  "Household Chores web": {
+    "source": 9443,
+    "target": 9011
+  },
+  "Household Chores API": {
+    "source": 9444,
+    "target": 9010
+  }
+}

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'runtime_config.dart';
 
 class AppConfig {
   /// The current app version. Updated automatically by release.ps1.
@@ -12,6 +13,9 @@ class AppConfig {
   /// On native: uses BACKEND_URL dart-define, or falls back to localhost.
   static String get backendUrl {
     if (kIsWeb) {
+      final configuredUrl = runtimeBackendUrl();
+      if (configuredUrl != null) return configuredUrl;
+
       final base = Uri.base;
       return '${base.scheme}://${base.host}:9010';
     }

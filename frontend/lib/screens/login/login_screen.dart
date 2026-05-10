@@ -7,6 +7,7 @@ import '../../services/auth_service.dart';
 import '../../services/version_service.dart';
 import '../configuration/configuration_screen.dart';
 import '../dashboard/dashboard_screen.dart';
+import '../install/install_guide_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -28,7 +29,10 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
-    setState(() { _isLoading = true; _versionResult = null; });
+    setState(() {
+      _isLoading = true;
+      _versionResult = null;
+    });
     final l10n = AppLocalizations.of(context)!;
     final url = context.read<HouseProvider>().activeHouseUrl;
 
@@ -36,7 +40,10 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (versionResult.isBlocking) {
-      setState(() { _isLoading = false; _versionResult = versionResult; });
+      setState(() {
+        _isLoading = false;
+        _versionResult = versionResult;
+      });
       return;
     }
 
@@ -44,7 +51,10 @@ class _LoginScreenState extends State<LoginScreen> {
         versionResult.status == VersionStatus.checkFailed) {
       final proceed = await _showVersionWarningDialog(versionResult);
       if (!mounted) return;
-      if (!proceed) { setState(() => _isLoading = false); return; }
+      if (!proceed) {
+        setState(() => _isLoading = false);
+        return;
+      }
     }
 
     try {
@@ -54,24 +64,29 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       if (!mounted) return;
       final name = context.read<AuthService>().currentUserName ?? 'User';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(l10n.welcomeBack(name)),
-        backgroundColor: Colors.green,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.welcomeBack(name)),
+          backgroundColor: Colors.green,
+        ),
+      );
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const DashboardScreen()),
       );
     } on AuthException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(e.message), backgroundColor: Colors.red.shade700,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.loginFailed(e.toString()))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.loginFailed(e.toString()))));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -81,28 +96,33 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<bool> _showVersionWarningDialog(VersionCheckResult result) async {
     final l10n = AppLocalizations.of(context)!;
     return await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(children: [
-          const Icon(Icons.warning_amber_rounded, color: Colors.orange),
-          const SizedBox(width: 8),
-          Text(l10n.versionWarningTitle),
-        ]),
-        content: Text(result.status == VersionStatus.endpointNotFound
-            ? l10n.versionEndpointNotFound
-            : l10n.versionCheckFailed),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.cancel),
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Row(
+              children: [
+                const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                const SizedBox(width: 8),
+                Text(l10n.versionWarningTitle),
+              ],
+            ),
+            content: Text(
+              result.status == VersionStatus.endpointNotFound
+                  ? l10n.versionEndpointNotFound
+                  : l10n.versionCheckFailed,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: Text(l10n.cancel),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: Text(l10n.continueAnyway),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l10n.continueAnyway),
-          ),
-        ],
-      ),
-    ) ?? false;
+        ) ??
+        false;
   }
 
   Widget _buildVersionBanner(AppLocalizations l10n) {
@@ -122,25 +142,33 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           Icon(Icons.error_outline, color: Colors.red.shade700, size: 20),
           const SizedBox(width: 8),
-          Expanded(child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                isAppOld ? l10n.appTooOld : l10n.serverTooOld,
-                style: TextStyle(fontWeight: FontWeight.bold,
-                    color: Colors.red.shade800),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                isAppOld
-                    ? l10n.appTooOldDetail(
-                        AppConfig.appVersion, result.serverVersion ?? '?')
-                    : l10n.serverTooOldDetail(
-                        result.serverVersion ?? '?', AppConfig.appVersion),
-                style: TextStyle(fontSize: 12, color: Colors.red.shade700),
-              ),
-            ],
-          )),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isAppOld ? l10n.appTooOld : l10n.serverTooOld,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red.shade800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  isAppOld
+                      ? l10n.appTooOldDetail(
+                          AppConfig.appVersion,
+                          result.serverVersion ?? '?',
+                        )
+                      : l10n.serverTooOldDetail(
+                          result.serverVersion ?? '?',
+                          AppConfig.appVersion,
+                        ),
+                  style: TextStyle(fontSize: 12, color: Colors.red.shade700),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -160,24 +188,38 @@ class _LoginScreenState extends State<LoginScreen> {
               await context.read<HouseProvider>().switchHouse(houseId);
               setState(() => _versionResult = null);
             },
-            itemBuilder: (_) => houseProvider.houses.map((house) =>
-              PopupMenuItem(
-                value: house.id,
-                child: Row(children: [
-                  Icon(Icons.home,
-                    color: house.id == houseProvider.activeHouseId
-                        ? Colors.teal : Colors.grey),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(house.name)),
-                ]),
-              ),
-            ).toList(),
+            itemBuilder: (_) => houseProvider.houses
+                .map(
+                  (house) => PopupMenuItem(
+                    value: house.id,
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.home,
+                          color: house.id == houseProvider.activeHouseId
+                              ? Colors.teal
+                              : Colors.grey,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text(house.name)),
+                      ],
+                    ),
+                  ),
+                )
+                .toList(),
           ),
           IconButton(
             icon: const Icon(Icons.settings),
             tooltip: l10n.houseConfiguration,
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const ConfigurationScreen()),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.install_mobile),
+            tooltip: 'Install app',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const InstallGuideScreen()),
             ),
           ),
         ],
@@ -191,14 +233,18 @@ class _LoginScreenState extends State<LoginScreen> {
             Consumer<HouseProvider>(
               builder: (_, hp, _) => Text(
                 hp.activeHouse?.name ?? l10n.householdChores,
-                style: Theme.of(context).textTheme.headlineSmall
-                    ?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             const SizedBox(height: 4),
-            Text(houseProvider.activeHouseUrl,
-                style: Theme.of(context).textTheme.bodySmall
-                    ?.copyWith(color: Colors.grey.shade600)),
+            Text(
+              houseProvider.activeHouseUrl,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+            ),
             const SizedBox(height: 24),
             _buildVersionBanner(l10n),
             TextField(
@@ -225,9 +271,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
             const SizedBox(height: 12),
-            Text('${l10n.appVersionLabel} ${AppConfig.appVersion}',
-                style: Theme.of(context).textTheme.bodySmall
-                    ?.copyWith(color: Colors.grey.shade400)),
+            Text(
+              '${l10n.appVersionLabel} ${AppConfig.appVersion}',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade400),
+            ),
           ],
         ),
       ),

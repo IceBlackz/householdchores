@@ -1,11 +1,11 @@
 {
-    "name": "frontend",
-    "short_name": "frontend",
-    "start_url": ".",
+    "name": "Household Chores",
+    "short_name": "Chores",
+    "start_url": "/",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#FAFBF7",
+    "theme_color": "#00796B",
+    "description": "Organize and monitor household chores, assignments, due dates, and reminders.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
