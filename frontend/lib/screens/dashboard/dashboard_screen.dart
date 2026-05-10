@@ -1,13 +1,18 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../constants/app_constants.dart';
 import '../../l10n/app_localizations.dart';
+import '../../models/dashboard_preferences.dart';
 import '../../models/chore.dart';
+import '../../models/room.dart';
 import '../../providers/chore_provider.dart';
 import '../../providers/house_provider.dart';
 import '../../providers/locale_provider.dart';
+import '../../services/dashboard_preferences_service.dart';
 import '../../services/auth_service.dart';
+import '../../services/chore_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/settings_service.dart';
 import '../admin/app_settings_screen.dart';
@@ -18,9 +23,23 @@ import '../complete_chore/complete_chore_screen.dart';
 import '../history/chore_history_screen.dart';
 import '../install/install_guide_screen.dart';
 import '../login/login_screen.dart';
+import '../rooms/rooms_screen.dart';
+import '../settings/dashboard_preferences_screen.dart';
 import 'widgets/chore_list_tile.dart';
 
 enum _DashboardFilter { all, mine, attention, critical }
+
+enum _DashboardMenuAction {
+  manageUsers,
+  appSettings,
+  dashboardPreferences,
+  rooms,
+  configureHouses,
+  language,
+  help,
+  install,
+  logout,
+}
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -31,6 +50,9 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   _DashboardFilter _workloadFilter = _DashboardFilter.all;
+  DashboardPreferences _dashboardPreferences = const DashboardPreferences();
+  List<Room> _rooms = [];
+  String? _activeRoomId;
   StreamSubscription<String>? _notificationSubscription;
 
   @override
@@ -39,6 +61,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final currentUserId = context.read<AuthService>().currentUserId ?? '';
       final provider = context.read<ChoreProvider>();
+      await _loadDashboardPreferences();
+      await _loadRooms();
       provider.setSeasonFilter(ChoreProvider.currentSeason());
       await provider.refresh(currentUserId);
       await provider.initRealtime(currentUserId);
@@ -49,6 +73,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
         .listen((choreId) {
           _completeChoreFromNotification(choreId);
         });
+  }
+
+  Future<void> _loadRooms() async {
+    try {
+      final rooms = await context.read<ChoreService>().fetchRooms();
+      if (!mounted) return;
+      setState(() {
+        _rooms = rooms;
+        if (_activeRoomId != null &&
+            !_rooms.any((room) => room.id == _activeRoomId)) {
+          _activeRoomId = null;
+        }
+      });
+    } catch (_) {
+      // Room filters are helpful, but should never block the dashboard.
+    }
+  }
+
+  Future<void> _loadDashboardPreferences() async {
+    final preferences = await DashboardPreferencesService().load();
+    if (!mounted) return;
+    setState(() {
+      _dashboardPreferences = preferences;
+      _workloadFilter = _filterFromPreference(preferences.defaultFilter);
+    });
   }
 
   @override
@@ -101,12 +150,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       await context.read<ChoreProvider>().completeChore(choreId, currentUserId);
       await _syncMobileNotifications();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.taskCompleted),
-          backgroundColor: Colors.green,
-        ),
-      );
+      _showCompletionSuccess();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -125,6 +169,98 @@ class _DashboardScreenState extends State<DashboardScreen> {
     Navigator.of(
       context,
     ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
+  }
+
+  Future<void> _openDashboardPreferences() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const DashboardPreferencesScreen()),
+    );
+    await _loadDashboardPreferences();
+  }
+
+  Future<void> _quickCompleteChore(Chore chore) async {
+    final currentUserId = context.read<AuthService>().currentUserId;
+    if (currentUserId == null || currentUserId.isEmpty) return;
+
+    try {
+      await context.read<ChoreProvider>().completeChore(
+        chore.id,
+        currentUserId,
+      );
+      await _syncMobileNotifications();
+      if (!mounted) return;
+      _showCompletionSuccess();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.failedToSubmit(e.toString()),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _showCompletionSuccess() {
+    final message = _dashboardPreferences.celebrationsEnabled
+        ? 'Nice work. One less chore in the orbit.'
+        : AppLocalizations.of(context)!.taskCompleted;
+    if (_dashboardPreferences.celebrationsEnabled) {
+      HapticFeedback.mediumImpact();
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.green),
+    );
+  }
+
+  _DashboardFilter _filterFromPreference(String filter) {
+    switch (filter) {
+      case DashboardPreferences.defaultFilterMine:
+        return _DashboardFilter.mine;
+      case DashboardPreferences.defaultFilterAttention:
+        return _DashboardFilter.attention;
+      case DashboardPreferences.defaultFilterCritical:
+        return _DashboardFilter.critical;
+      default:
+        return _DashboardFilter.all;
+    }
+  }
+
+  Future<void> _handleMenuAction(_DashboardMenuAction action) async {
+    switch (action) {
+      case _DashboardMenuAction.manageUsers:
+        await Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const UserManagementScreen()));
+      case _DashboardMenuAction.appSettings:
+        await Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const AppSettingsScreen()));
+      case _DashboardMenuAction.dashboardPreferences:
+        await _openDashboardPreferences();
+      case _DashboardMenuAction.rooms:
+        await Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const RoomsScreen()));
+        await _loadRooms();
+        await _refresh();
+      case _DashboardMenuAction.configureHouses:
+        await Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const ConfigurationScreen()));
+      case _DashboardMenuAction.language:
+        _showLanguagePicker();
+      case _DashboardMenuAction.help:
+        _showGettingStartedSheet();
+      case _DashboardMenuAction.install:
+        await Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const InstallGuideScreen()));
+      case _DashboardMenuAction.logout:
+        _logout();
+    }
   }
 
   Future<void> _switchHouse(String houseId) async {
@@ -300,17 +436,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ChoreProvider provider,
     String currentUserId,
   ) {
+    final roomFiltered = _activeRoomId == null
+        ? chores
+        : chores.where((c) => c.room?.id == _activeRoomId).toList();
+
     switch (_workloadFilter) {
       case _DashboardFilter.mine:
-        return chores
+        return roomFiltered
             .where((c) => c.activeAssigneeId == currentUserId)
             .toList();
       case _DashboardFilter.attention:
-        return chores.where((c) => _isDueOrOverdue(c, provider)).toList();
+        return roomFiltered.where((c) => _isDueOrOverdue(c, provider)).toList();
       case _DashboardFilter.critical:
-        return chores.where((c) => _isCritical(c, provider)).toList();
+        return roomFiltered.where((c) => _isCritical(c, provider)).toList();
       case _DashboardFilter.all:
-        return chores;
+        return roomFiltered;
     }
   }
 
@@ -338,6 +478,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         actions: [
           // House switcher
           PopupMenuButton<String>(
+            tooltip: l10n.activeHouse,
+            icon: const Icon(Icons.home_outlined),
             onSelected: (houseId) async {
               await _switchHouse(houseId);
             },
@@ -361,44 +503,73 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 )
                 .toList(),
           ),
-          // Admin-only: user management
-          if (authService.isCurrentUserAdmin)
-            IconButton(
-              icon: const Icon(Icons.manage_accounts),
-              tooltip: l10n.manageUsers,
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const UserManagementScreen()),
+          PopupMenuButton<_DashboardMenuAction>(
+            tooltip: 'App menu',
+            icon: const Icon(Icons.menu),
+            onSelected: _handleMenuAction,
+            itemBuilder: (_) => [
+              if (authService.isCurrentUserAdmin)
+                PopupMenuItem(
+                  value: _DashboardMenuAction.manageUsers,
+                  child: _MenuItem(
+                    icon: Icons.manage_accounts,
+                    label: l10n.manageUsers,
+                  ),
+                ),
+              if (authService.isCurrentUserAdmin)
+                const PopupMenuItem(
+                  value: _DashboardMenuAction.appSettings,
+                  child: _MenuItem(icon: Icons.tune, label: 'App settings'),
+                ),
+              const PopupMenuItem(
+                value: _DashboardMenuAction.dashboardPreferences,
+                child: _MenuItem(
+                  icon: Icons.dashboard_customize_outlined,
+                  label: 'Dashboard preferences',
+                ),
               ),
-            ),
-          if (authService.isCurrentUserAdmin)
-            IconButton(
-              icon: const Icon(Icons.tune),
-              tooltip: 'App settings',
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const AppSettingsScreen()),
+              const PopupMenuItem(
+                value: _DashboardMenuAction.rooms,
+                child: _MenuItem(
+                  icon: Icons.meeting_room_outlined,
+                  label: 'Rooms and focus zones',
+                ),
               ),
-            ),
-          IconButton(
-            icon: const Icon(Icons.language),
-            onPressed: _showLanguagePicker,
-            tooltip: l10n.selectLanguage,
-          ),
-          IconButton(
-            icon: const Icon(Icons.help_outline),
-            onPressed: _showGettingStartedSheet,
-            tooltip: l10n.dashboardHelpTitle,
-          ),
-          IconButton(
-            icon: const Icon(Icons.install_mobile),
-            tooltip: 'Install app',
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const InstallGuideScreen()),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _logout,
-            tooltip: l10n.logout,
+              PopupMenuItem(
+                value: _DashboardMenuAction.configureHouses,
+                child: _MenuItem(
+                  icon: Icons.home_work_outlined,
+                  label: l10n.houseConfiguration,
+                ),
+              ),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: _DashboardMenuAction.language,
+                child: _MenuItem(
+                  icon: Icons.language,
+                  label: l10n.selectLanguage,
+                ),
+              ),
+              PopupMenuItem(
+                value: _DashboardMenuAction.help,
+                child: _MenuItem(
+                  icon: Icons.help_outline,
+                  label: l10n.dashboardHelpTitle,
+                ),
+              ),
+              const PopupMenuItem(
+                value: _DashboardMenuAction.install,
+                child: _MenuItem(
+                  icon: Icons.install_mobile,
+                  label: 'Install app',
+                ),
+              ),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: _DashboardMenuAction.logout,
+                child: _MenuItem(icon: Icons.logout, label: l10n.logout),
+              ),
+            ],
           ),
         ],
         bottom: PreferredSize(
@@ -481,6 +652,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         setState(() => _workloadFilter = filter);
                       },
                     ),
+                    _RoomFilterBar(
+                      rooms: _rooms,
+                      activeRoomId: _activeRoomId,
+                      onChanged: (roomId) {
+                        setState(() => _activeRoomId = roomId);
+                      },
+                    ),
                     if (visibleChores.isEmpty)
                       const _FilteredEmptyState()
                     else
@@ -495,10 +673,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           maxDueDate: maxDue,
                           currentUserId: currentUserId,
                           onTap: () async {
-                            final messenger = ScaffoldMessenger.of(context);
-                            final msg = AppLocalizations.of(
-                              context,
-                            )!.taskCompleted;
                             final result = await Navigator.of(context)
                                 .push<bool>(
                                   MaterialPageRoute(
@@ -507,14 +681,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ),
                                 );
                             if (result == true && mounted) {
-                              messenger.showSnackBar(
-                                SnackBar(
-                                  content: Text(msg),
-                                  backgroundColor: Colors.green,
-                                ),
-                              );
+                              _showCompletionSuccess();
                             }
                           },
+                          onQuickComplete:
+                              _dashboardPreferences.quickCompleteEnabled
+                              ? () => _quickCompleteChore(chore)
+                              : null,
                           onEdit: () async {
                             final result = await Navigator.of(context)
                                 .push<bool>(
@@ -537,6 +710,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
             ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+
+class _MenuItem extends StatelessWidget {
+  const _MenuItem({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [Icon(icon, size: 20), const SizedBox(width: 12), Text(label)],
     );
   }
 }
@@ -751,6 +940,53 @@ class _WorkloadFilterBar extends StatelessWidget {
         ],
         selected: {selected},
         onSelectionChanged: (selection) => onSelected(selection.first),
+      ),
+    );
+  }
+}
+
+class _RoomFilterBar extends StatelessWidget {
+  const _RoomFilterBar({
+    required this.rooms,
+    required this.activeRoomId,
+    required this.onChanged,
+  });
+
+  final List<Room> rooms;
+  final String? activeRoomId;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    if (rooms.isEmpty) return const SizedBox.shrink();
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
+      child: Row(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: FilterChip(
+              avatar: const Icon(Icons.home_work_outlined, size: 16),
+              label: const Text('All rooms'),
+              selected: activeRoomId == null,
+              onSelected: (_) => onChanged(null),
+            ),
+          ),
+          ...rooms.map(
+            (room) => Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: FilterChip(
+                avatar: const Icon(Icons.meeting_room_outlined, size: 16),
+                label: Text(room.name),
+                selected: activeRoomId == room.id,
+                onSelected: (_) =>
+                    onChanged(activeRoomId == room.id ? null : room.id),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

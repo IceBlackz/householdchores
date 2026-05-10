@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Household Chores Cache Reset</title>
+  <style>
+    body {
+      align-items: center;
+      background: #f5fbf8;
+      color: #183832;
+      display: flex;
+      font-family: sans-serif;
+      min-height: 100vh;
+      margin: 0;
+      padding: 24px;
+    }
+
+    main {
+      background: white;
+      border: 1px solid #cfe7df;
+      border-radius: 16px;
+      box-shadow: 0 16px 50px rgb(24 56 50 / 12%);
+      margin: 0 auto;
+      max-width: 560px;
+      padding: 28px;
+    }
+
+    a {
+      color: #00796b;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Refreshing Household Chores</h1>
+    <p id="status">Clearing the old web app cache...</p>
+    <p>If you are not redirected automatically, <a href="/">open the app</a>.</p>
+  </main>
+  <script>
+    async function reset() {
+      if ("serviceWorker" in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map((registration) => registration.unregister()));
+      }
+
+      if ("caches" in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((key) => caches.delete(key)));
+      }
+
+      localStorage.removeItem("householdchores.webBuildId");
+      document.getElementById("status").textContent = "Cache cleared. Opening the newest app...";
+      window.location.replace("/?cache-reset=" + Date.now());
+    }
+
+    reset().catch((error) => {
+      document.getElementById("status").textContent =
+        "Could not clear the cache automatically: " + error;
+    });
+  </script>
+</body>
+</html>

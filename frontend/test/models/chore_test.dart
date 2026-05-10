@@ -27,10 +27,18 @@ RecordModel _choreRecord({
   String season = 'All',
   Map<String, dynamic>? defaultAssigneeJson,
   Map<String, dynamic>? onetimeOnlyAssigneeJson,
+  Map<String, dynamic>? roomJson,
 }) {
   final expand = <String, dynamic>{};
-  if (defaultAssigneeJson != null) expand['default_assignee'] = defaultAssigneeJson;
-  if (onetimeOnlyAssigneeJson != null) expand['onetimeonly_assignee'] = onetimeOnlyAssigneeJson;
+  if (defaultAssigneeJson != null) {
+    expand['default_assignee'] = defaultAssigneeJson;
+  }
+  if (onetimeOnlyAssigneeJson != null) {
+    expand['onetimeonly_assignee'] = onetimeOnlyAssigneeJson;
+  }
+  if (roomJson != null) {
+    expand['room'] = roomJson;
+  }
 
   return RecordModel.fromJson({
     'id': id,
@@ -43,6 +51,7 @@ RecordModel _choreRecord({
     'season': season,
     'default_assignee': defaultAssigneeJson?['id'] ?? '',
     'onetimeonly_assignee': onetimeOnlyAssigneeJson?['id'] ?? '',
+    'room': roomJson?['id'] ?? '',
     'created': '2024-01-01 10:00:00.000Z',
     if (expand.isNotEmpty) 'expand': expand,
   });
@@ -53,12 +62,25 @@ Map<String, dynamic> _userJson({
   String name = '',
   String email = 'user@home.local',
 }) => {
-      'id': id,
-      'collectionId': '_pb_users_auth_',
-      'collectionName': 'users',
-      'name': name,
-      'email': email,
-    };
+  'id': id,
+  'collectionId': '_pb_users_auth_',
+  'collectionName': 'users',
+  'name': name,
+  'email': email,
+};
+
+Map<String, dynamic> _roomJson({
+  String id = 'room1',
+  String name = 'Kitchen',
+  String icon = 'kitchen',
+}) => {
+  'id': id,
+  'collectionId': 'pbc_5100000001',
+  'collectionName': 'rooms',
+  'name': name,
+  'icon': icon,
+  'created': '2024-01-01 10:00:00.000Z',
+};
 
 void main() {
   group('AppUser', () {
@@ -68,7 +90,9 @@ void main() {
     });
 
     test('displayName falls back to email when name is empty', () {
-      final user = AppUser.fromRecord(_userRecord(name: '', email: 'alice@home.com'));
+      final user = AppUser.fromRecord(
+        _userRecord(name: '', email: 'alice@home.com'),
+      );
       expect(user.displayName, 'alice@home.com');
     });
   });
@@ -94,7 +118,9 @@ void main() {
 
     test('activeAssignee uses defaultAssignee when no override', () {
       final chore = Chore.fromRecord(
-        _choreRecord(defaultAssigneeJson: _userJson(id: 'u1', name: 'Bob')),
+        _choreRecord(
+          defaultAssigneeJson: _userJson(id: 'u1', name: 'Bob'),
+        ),
       );
       expect(chore.hasOneTimeOverride, isFalse);
       expect(chore.activeAssigneeId, 'u1');
@@ -116,10 +142,23 @@ void main() {
     test('activeAssigneeName falls back to email when user name is empty', () {
       final chore = Chore.fromRecord(
         _choreRecord(
-          defaultAssigneeJson: _userJson(id: 'u1', name: '', email: 'bob@home.local'),
+          defaultAssigneeJson: _userJson(
+            id: 'u1',
+            name: '',
+            email: 'bob@home.local',
+          ),
         ),
       );
       expect(chore.activeAssigneeName, 'bob@home.local');
+    });
+
+    test('parses expanded room when present', () {
+      final chore = Chore.fromRecord(
+        _choreRecord(roomJson: _roomJson(name: 'Kitchen')),
+      );
+
+      expect(chore.room?.id, 'room1');
+      expect(chore.room?.name, 'Kitchen');
     });
   });
 }

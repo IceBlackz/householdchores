@@ -36,12 +36,7 @@ class House {
 
   /// Converts a House to a map.
   Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'name': name,
-      'url': url,
-      'haWebhookUrl': haWebhookUrl,
-    };
+    return {'id': id, 'name': name, 'url': url, 'haWebhookUrl': haWebhookUrl};
   }
 
   /// Creates a new House.

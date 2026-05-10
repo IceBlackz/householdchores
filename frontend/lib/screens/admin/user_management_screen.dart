@@ -23,12 +23,25 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   }
 
   Future<void> _fetchUsers() async {
-    setState(() { _isLoading = true; _error = null; });
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
     try {
       final users = await context.read<ChoreService>().fetchUsers();
-      if (mounted) setState(() { _users = users; _isLoading = false; });
+      if (mounted) {
+        setState(() {
+          _users = users;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      if (mounted) setState(() { _error = e.toString(); _isLoading = false; });
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -45,10 +58,12 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     final currentUserId = context.read<AuthService>().currentUserId;
 
     if (user.id == currentUserId) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(l10n.cannotDeleteSelf),
-        backgroundColor: Colors.orange,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.cannotDeleteSelf),
+          backgroundColor: Colors.orange,
+        ),
+      );
       return;
     }
 
@@ -76,17 +91,18 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
         await context.read<ChoreService>().deleteUser(user.id);
         await _fetchUsers();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(l10n.userDeleted),
-            backgroundColor: Colors.orange,
-          ));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.userDeleted),
+              backgroundColor: Colors.orange,
+            ),
+          );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Colors.red,
-          ));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+          );
         }
       }
     }
@@ -107,99 +123,104 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(_error!, style: const TextStyle(color: Colors.red)),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                          onPressed: _fetchUsers, child: Text(l10n.retry)),
-                    ],
+          ? Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(_error!, style: const TextStyle(color: Colors.red)),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _fetchUsers,
+                    child: Text(l10n.retry),
                   ),
-                )
-              : _users.isEmpty
-                  ? Center(child: Text(l10n.noUsersFound))
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _users.length,
-                      itemBuilder: (_, index) {
-                        final user = _users[index];
-                        final isSelf = user.id == currentUserId;
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: user.isAdmin
-                                  ? Colors.teal
-                                  : Colors.grey.shade300,
-                              child: Text(
-                                user.displayName.isNotEmpty
-                                    ? user.displayName[0].toUpperCase()
-                                    : '?',
-                                style: TextStyle(
-                                  color: user.isAdmin
-                                      ? Colors.white
-                                      : Colors.grey.shade700,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            title: Row(
-                              children: [
-                                Text(user.displayName),
-                                if (isSelf) ...[
-                                  const SizedBox(width: 6),
-                                  Chip(
-                                    label: Text(l10n.youLabel,
-                                        style: const TextStyle(fontSize: 11)),
-                                    padding: EdgeInsets.zero,
-                                    visualDensity: VisualDensity.compact,
-                                    backgroundColor: Colors.blue.shade50,
-                                  ),
-                                ],
-                                if (user.isAdmin) ...[
-                                  const SizedBox(width: 6),
-                                  Chip(
-                                    label: Text(l10n.adminBadge,
-                                        style: const TextStyle(fontSize: 11)),
-                                    padding: EdgeInsets.zero,
-                                    visualDensity: VisualDensity.compact,
-                                    backgroundColor: Colors.teal.shade50,
-                                    side: BorderSide(
-                                        color: Colors.teal.shade200),
-                                  ),
-                                ],
-                              ],
-                            ),
-                            subtitle: Text(user.email,
-                                style: TextStyle(color: Colors.grey.shade600)),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.edit,
-                                      color: Colors.grey),
-                                  tooltip: l10n.edit,
-                                  onPressed: () =>
-                                      _showUserDialog(user: user),
-                                ),
-                                IconButton(
-                                  icon: Icon(Icons.delete_outline,
-                                      color: isSelf
-                                          ? Colors.grey.shade300
-                                          : Colors.red.shade300),
-                                  tooltip: l10n.deleteUser,
-                                  onPressed: isSelf
-                                      ? null
-                                      : () => _confirmDelete(user),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
+                ],
+              ),
+            )
+          : _users.isEmpty
+          ? Center(child: Text(l10n.noUsersFound))
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: _users.length,
+              itemBuilder: (_, index) {
+                final user = _users[index];
+                final isSelf = user.id == currentUserId;
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: user.isAdmin
+                          ? Colors.teal
+                          : Colors.grey.shade300,
+                      child: Text(
+                        user.displayName.isNotEmpty
+                            ? user.displayName[0].toUpperCase()
+                            : '?',
+                        style: TextStyle(
+                          color: user.isAdmin
+                              ? Colors.white
+                              : Colors.grey.shade700,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
+                    title: Row(
+                      children: [
+                        Text(user.displayName),
+                        if (isSelf) ...[
+                          const SizedBox(width: 6),
+                          Chip(
+                            label: Text(
+                              l10n.youLabel,
+                              style: const TextStyle(fontSize: 11),
+                            ),
+                            padding: EdgeInsets.zero,
+                            visualDensity: VisualDensity.compact,
+                            backgroundColor: Colors.blue.shade50,
+                          ),
+                        ],
+                        if (user.isAdmin) ...[
+                          const SizedBox(width: 6),
+                          Chip(
+                            label: Text(
+                              l10n.adminBadge,
+                              style: const TextStyle(fontSize: 11),
+                            ),
+                            padding: EdgeInsets.zero,
+                            visualDensity: VisualDensity.compact,
+                            backgroundColor: Colors.teal.shade50,
+                            side: BorderSide(color: Colors.teal.shade200),
+                          ),
+                        ],
+                      ],
+                    ),
+                    subtitle: Text(
+                      user.email,
+                      style: TextStyle(color: Colors.grey.shade600),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit, color: Colors.grey),
+                          tooltip: l10n.edit,
+                          onPressed: () => _showUserDialog(user: user),
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            Icons.delete_outline,
+                            color: isSelf
+                                ? Colors.grey.shade300
+                                : Colors.red.shade300,
+                          ),
+                          tooltip: l10n.deleteUser,
+                          onPressed: isSelf ? null : () => _confirmDelete(user),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
     );
   }
 }
@@ -257,40 +278,43 @@ class _UserDialogState extends State<_UserDialog> {
       if (_isEditing) {
         await service.updateUser(
           widget.user!.id,
-          name:     _nameController.text.trim(),
-          email:    _emailController.text.trim(),
-          isAdmin:  _isAdmin,
+          name: _nameController.text.trim(),
+          email: _emailController.text.trim(),
+          isAdmin: _isAdmin,
           password: (_changePassword && _passwordController.text.isNotEmpty)
               ? _passwordController.text
               : null,
         );
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(l10n.userUpdated),
-            backgroundColor: Colors.green,
-          ));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.userUpdated),
+              backgroundColor: Colors.green,
+            ),
+          );
         }
       } else {
         await service.createUser(
-          name:     _nameController.text.trim(),
-          email:    _emailController.text.trim(),
+          name: _nameController.text.trim(),
+          email: _emailController.text.trim(),
           password: _passwordController.text,
-          isAdmin:  _isAdmin,
+          isAdmin: _isAdmin,
         );
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(l10n.userAdded),
-            backgroundColor: Colors.green,
-          ));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.userAdded),
+              backgroundColor: Colors.green,
+            ),
+          );
         }
       }
       if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(e.toString()),
-          backgroundColor: Colors.red,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        );
         setState(() => _isSaving = false);
       }
     }
@@ -349,8 +373,9 @@ class _UserDialogState extends State<_UserDialog> {
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _confirmController,
-                    decoration:
-                        InputDecoration(labelText: l10n.passwordConfirm),
+                    decoration: InputDecoration(
+                      labelText: l10n.passwordConfirm,
+                    ),
                     obscureText: true,
                     validator: (v) {
                       if (!_isEditing || _changePassword) {
@@ -384,9 +409,13 @@ class _UserDialogState extends State<_UserDialog> {
           onPressed: _isSaving ? null : _save,
           child: _isSaving
               ? const SizedBox(
-                  width: 16, height: 16,
+                  width: 16,
+                  height: 16,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: Colors.white))
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
               : Text(l10n.save),
         ),
       ],

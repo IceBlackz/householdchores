@@ -10,8 +10,22 @@ RUN flutter pub get
 COPY frontend/ .
 RUN flutter gen-l10n
 
-# Build the release web app.
-RUN flutter build web --release
+# Build the release web app. The PWA service worker is disabled because stale
+# offline app-shell caches can otherwise keep serving old Flutter builds.
+RUN flutter build web --release --pwa-strategy=none && \
+    APP_VERSION="$(grep '^version:' pubspec.yaml | awk '{print $2}' | tr -d '\r')" && \
+    BUILD_ID="$(date -u +%Y%m%d%H%M%S)" && \
+    printf '{"version":"%s","buildId":"%s","builtAt":"%s"}\n' "$APP_VERSION" "$BUILD_ID" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > build/web/version.json && \
+    printf '%s\n' \
+      'self.addEventListener("install", () => self.skipWaiting());' \
+      'self.addEventListener("activate", (event) => {' \
+      '  event.waitUntil((async () => {' \
+      '    await self.registration.unregister();' \
+      '    const clients = await self.clients.matchAll({ type: "window" });' \
+      '    for (const client of clients) client.navigate(client.url);' \
+      '  })());' \
+      '});' \
+      > build/web/flutter_service_worker.js
 
 FROM nginx:alpine AS web
 

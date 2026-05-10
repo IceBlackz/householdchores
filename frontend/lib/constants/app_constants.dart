@@ -26,6 +26,7 @@ class Collections {
   static const String chores = 'chores';
   static const String choreLogs = 'chore_logs';
   static const String appSettings = 'app_settings';
+  static const String rooms = 'rooms';
 }
 
 /// Allowed values for the chore interval_unit field.

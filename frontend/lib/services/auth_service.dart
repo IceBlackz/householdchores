@@ -19,7 +19,7 @@ class AuthService {
 
   PocketBase get _pb => PocketBaseService().client;
 
-  bool get isLoggedIn       => _pb.authStore.isValid;
+  bool get isLoggedIn => _pb.authStore.isValid;
   String? get currentUserId => _pb.authStore.record?.id;
 
   bool get isCurrentUserAdmin {
@@ -36,18 +36,18 @@ class AuthService {
 
   Future<void> login(String email, String password) async {
     try {
-      await _pb.collection(Collections.users)
-          .authWithPassword(email, password);
+      await _pb.collection(Collections.users).authWithPassword(email, password);
     } on ClientException catch (e) {
       if (e.statusCode == 400) {
         throw const AuthException(
-            'Incorrect email or password. Please try again.');
+          'Incorrect email or password. Please try again.',
+        );
       } else if (e.statusCode == 0) {
         throw const AuthException(
-            'Cannot connect to the server. Check your network.');
+          'Cannot connect to the server. Check your network.',
+        );
       }
-      throw AuthException(
-          'Login failed: ${e.response['message'] ?? e}');
+      throw AuthException('Login failed: ${e.response['message'] ?? e}');
     }
   }
 

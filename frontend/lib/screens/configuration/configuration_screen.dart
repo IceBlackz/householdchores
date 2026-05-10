@@ -16,8 +16,9 @@ class ConfigurationScreen extends StatefulWidget {
 }
 
 class _ConfigurationScreenState extends State<ConfigurationScreen>
-    // FIX (this session): mixin required for TabController
-    with SingleTickerProviderStateMixin {
+        // FIX (this session): mixin required for TabController
+        with
+        SingleTickerProviderStateMixin {
   late final TabController _tabController;
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
@@ -107,10 +108,12 @@ class _ConfigurationScreenState extends State<ConfigurationScreen>
           haWebhookUrl: haWebhookUrl,
         );
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(l10n.houseUpdated),
-          backgroundColor: Colors.green,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.houseUpdated),
+            backgroundColor: Colors.green,
+          ),
+        );
       } else {
         // FIX (this session): addHouse now returns the new ID — switch to that,
         // not to houseProvider.activeHouseId which points to the previously active house
@@ -121,19 +124,23 @@ class _ConfigurationScreenState extends State<ConfigurationScreen>
         );
         await houseProvider.switchHouse(newId);
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(l10n.houseAdded),
-          backgroundColor: Colors.green,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.houseAdded),
+            backgroundColor: Colors.green,
+          ),
+        );
       }
 
       if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(l10n.saveFailed(e.toString())),
-        backgroundColor: Colors.red,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.saveFailed(e.toString())),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -162,17 +169,21 @@ class _ConfigurationScreenState extends State<ConfigurationScreen>
       try {
         await context.read<HouseProvider>().deleteHouse(house.id);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(l10n.houseDeleted),
-            backgroundColor: Colors.orange,
-          ));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.houseDeleted),
+              backgroundColor: Colors.orange,
+            ),
+          );
         }
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(l10n.deleteHouseFailed(e.toString())),
-          backgroundColor: Colors.red,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.deleteHouseFailed(e.toString())),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -229,8 +240,10 @@ class _ConfigurationScreenState extends State<ConfigurationScreen>
           child: ListTile(
             leading: CircleAvatar(
               backgroundColor: isActive ? Colors.teal : Colors.grey.shade300,
-              child: Icon(Icons.home,
-                  color: isActive ? Colors.white : Colors.grey),
+              child: Icon(
+                Icons.home,
+                color: isActive ? Colors.white : Colors.grey,
+              ),
             ),
             title: Text(house.name),
             subtitle: Text(house.url),
@@ -256,7 +269,9 @@ class _ConfigurationScreenState extends State<ConfigurationScreen>
   }
 
   Widget _buildAddEditFormTab(
-      HouseProvider houseProvider, AppLocalizations l10n) {
+    HouseProvider houseProvider,
+    AppLocalizations l10n,
+  ) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Form(
@@ -265,7 +280,9 @@ class _ConfigurationScreenState extends State<ConfigurationScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              _isEditing ? 'Editing: ${widget.houseToEdit!.name}' : l10n.addNewHouse,
+              _isEditing
+                  ? 'Editing: ${widget.houseToEdit!.name}'
+                  : l10n.addNewHouse,
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 16),
@@ -306,7 +323,9 @@ class _ConfigurationScreenState extends State<ConfigurationScreen>
               validator: (v) {
                 if (v != null && v.isNotEmpty) {
                   final uri = Uri.tryParse(v);
-                  if (uri == null || !uri.isAbsolute) return l10n.invalidUrlError;
+                  if (uri == null || !uri.isAbsolute) {
+                    return l10n.invalidUrlError;
+                  }
                 }
                 return null;
               },
@@ -314,8 +333,10 @@ class _ConfigurationScreenState extends State<ConfigurationScreen>
             if (_validationError != null)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
-                child: Text(_validationError!,
-                    style: const TextStyle(color: Colors.red)),
+                child: Text(
+                  _validationError!,
+                  style: const TextStyle(color: Colors.red),
+                ),
               ),
             if (_isChecking)
               const Padding(
@@ -325,8 +346,10 @@ class _ConfigurationScreenState extends State<ConfigurationScreen>
             if (!_isChecking && _isValid)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
-                child: Text(l10n.connectionValid,
-                    style: const TextStyle(color: Colors.green)),
+                child: Text(
+                  l10n.connectionValid,
+                  style: const TextStyle(color: Colors.green),
+                ),
               ),
             const SizedBox(height: 24),
             ElevatedButton(
@@ -340,7 +363,9 @@ class _ConfigurationScreenState extends State<ConfigurationScreen>
   }
 
   Widget _buildHaSettingsTab(
-      HouseProvider houseProvider, AppLocalizations l10n) {
+    HouseProvider houseProvider,
+    AppLocalizations l10n,
+  ) {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -354,8 +379,10 @@ class _ConfigurationScreenState extends State<ConfigurationScreen>
           style: Theme.of(context).textTheme.bodyMedium,
         ),
         const SizedBox(height: 16),
-        Text(l10n.haWebhookDescription,
-            style: Theme.of(context).textTheme.bodySmall),
+        Text(
+          l10n.haWebhookDescription,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
       ],
     );
   }

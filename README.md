@@ -1,24 +1,56 @@
 # Household Chores Manager
 
-A self-hosted app for organizing household tasks, reminders, assignments, and chore history. It is designed for normal home use: run the server on a home computer, mini PC, Raspberry Pi, Jetson, or NAS, then use the web app or mobile app from your household devices.
+A self-hosted app for organizing household tasks, reminders, assignments, proof photos, and chore history. Run the server on a home computer, mini PC, Raspberry Pi, Jetson, or NAS, then use the web app or mobile app from household devices.
 
-The app keeps your data on your own server. There are no subscriptions and no required cloud service.
+Your data stays on your own server. There are no subscriptions and no required cloud service.
 
-## What You Can Do
+## Index
+
+- [Features](#features)
+- [How It Works](#how-it-works)
+- [Requirements](#requirements)
+- [Quick Start](#quick-start)
+- [First App User](#first-app-user)
+- [Everyday Use](#everyday-use)
+- [Rooms and Focus Zones](#rooms-and-focus-zones)
+- [Settings and Configuration](#settings-and-configuration)
+- [Notifications and Home Assistant](#notifications-and-home-assistant)
+- [Install From the Website](#install-from-the-website)
+- [HTTPS Setup](#https-setup)
+- [Android App](#android-app)
+- [iOS App](#ios-app)
+- [Updating and Backup](#updating-and-backup)
+- [Automated Checks](#automated-checks)
+- [Troubleshooting](#troubleshooting)
+- [Useful Commands](#useful-commands)
+- [Project Layout](#project-layout)
+- [Roadmap Ideas](#roadmap-ideas)
+
+## Features
 
 - Create recurring chores such as vacuuming, cleaning filters, taking bins out, or garden work.
+- Start new chores from common templates, then adjust the details.
+- Organize chores by room or focus zone.
+- Create a chore directly inside a room.
+- Assign a chore to multiple rooms as independent copies.
+- Duplicate a room with its tasks, useful for rooms like multiple toilets or bedrooms.
+- Add suggested default chores for a room, such as floors, windows, dusting, bins, kitchen counters, or toilet cleaning.
 - Assign chores to household members.
 - Temporarily assign a chore to someone else for one round.
-- See what is due today, overdue, or past a hard deadline.
+- See what is assigned to you, due today, overdue, or past a hard deadline.
+- Set desired intervals and hard deadlines in days, weeks, months, quarters, or years.
+- Add seasonal behavior and season-specific interval overrides.
 - Complete chores for yourself or on behalf of another household member.
 - Add notes and before/after photos when completing a chore.
+- Use optional quick-complete buttons for fast check-ins.
+- Configure dashboard preferences, including default focus filter and completion feedback.
 - View completion history per chore.
 - Manage users from inside the app once an admin user exists.
 - Switch between multiple houses or PocketBase servers.
 - Use the app in English, Dutch, or Spanish.
-- Configure mobile reminders from the app settings.
+- Configure mobile reminders from app settings.
 - Use Android/iOS local notifications without Home Assistant.
-- Optionally send due chore digests to Home Assistant.
+- Optionally send due chore digests and completion events to Home Assistant.
 
 ## How It Works
 
@@ -31,11 +63,9 @@ The project has two services:
 
 When you open the web app on another device, it automatically connects to the backend on the same machine at port `9010`. For example, if the web app is `http://192.168.1.20:9011`, it talks to `http://192.168.1.20:9010`.
 
-If you use an HTTPS proxy, you can override the backend URL in `frontend/web/config.js` before rebuilding the web container.
+If you use an HTTPS proxy, override the backend URL in `frontend/web/config.js` before rebuilding the web container.
 
-## Before You Start
-
-You need:
+## Requirements
 
 - Docker Desktop, or Docker Engine with Docker Compose.
 - Git, if you want to clone the repository.
@@ -69,11 +99,11 @@ ADMIN_EMAIL="admin@example.com"
 ADMIN_PASSWORD="choose-a-strong-password"
 ```
 
-Important password tips:
+Password notes:
 
 - Keep the quotes around the password.
 - If your password contains `$`, write it as `$$` in this file.
-- This account is the PocketBase server admin. You will still create normal app users in the next steps.
+- This is the PocketBase server admin. You will still create normal app users separately.
 
 ### 3. Start the App
 
@@ -90,7 +120,7 @@ When it finishes, open:
 - Web app: http://localhost:9011
 - PocketBase admin panel: http://localhost:9010/_/
 
-### 4. Create Your First App User
+## First App User
 
 1. Open http://localhost:9010/_/.
 2. Log in with the `ADMIN_EMAIL` and `ADMIN_PASSWORD` from `backend/.env`.
@@ -100,54 +130,11 @@ When it finishes, open:
 6. Set `is_admin` to `true` for your own first user.
 7. Save the user.
 
-Now open http://localhost:9011 and log in with the app user you just created.
-
-After this, admin users can manage household users directly inside the app.
+Now open http://localhost:9011 and log in with that app user. After this, admin users can manage household users directly inside the app.
 
 ## Everyday Use
 
-### Add Household Members
-
-In the dashboard, admin users can open **Manage users** from the toolbar.
-
-Use this to:
-
-- Add new household members.
-- Change display names.
-- Reset or set passwords.
-- Give someone admin access.
-- Remove users that are no longer needed.
-
-Tip: keep at least one admin user.
-
-### Add Chores
-
-Use the **+** button on the dashboard.
-
-For each chore you can set:
-
-- Title and description.
-- Desired interval, such as every 7 days.
-- Hard deadline, such as maximum 14 days.
-- Interval unit: days, weeks, months, quarters, or years.
-- Season behavior, for chores that only matter in certain seasons.
-- Default assignee.
-- One-time assignee, for the next completion only.
-
-### Complete Chores
-
-Tap a chore to complete it.
-
-You can:
-
-- Choose who completed it.
-- Add notes.
-- Add before and after photos.
-- Clear a one-time assignment automatically.
-
-Other connected devices update automatically after a chore is completed.
-
-### Understand the Dashboard
+### Dashboard
 
 The dashboard highlights:
 
@@ -163,9 +150,117 @@ Useful filters:
 - **Attention**: chores that should be done soon or are already late.
 - **Critical**: chores past the hard deadline.
 
-## App Settings and Notifications
+Use the house icon to switch houses. Use the menu icon for users, app settings, dashboard preferences, house configuration, language selection, help, install instructions, and logout.
 
-Admin users can open **App settings** from the dashboard toolbar.
+### Add Household Members
+
+In the dashboard menu, admin users can open **Manage users**.
+
+Use this to:
+
+- Add new household members.
+- Change display names.
+- Reset or set passwords.
+- Give someone admin access.
+- Remove users that are no longer needed.
+
+Keep at least one admin user.
+
+### Add Chores
+
+Use the **+** button on the dashboard.
+
+For each chore you can set:
+
+- Title and description.
+- A template to pre-fill common chore details.
+- Desired interval, such as every 7 days.
+- Hard deadline, such as maximum 14 days.
+- Interval unit: days, weeks, months, quarters, or years.
+- Season behavior, for chores that only matter in certain seasons.
+- Season-specific interval overrides.
+- Room assignment. Selecting multiple rooms creates separate chore copies.
+- Default assignee.
+- One-time assignee, for the next completion only.
+
+### Complete Chores
+
+Tap a chore to open the completion screen.
+
+You can:
+
+- Choose who completed it.
+- Add notes.
+- Add before and after photos.
+- Clear a one-time assignment automatically.
+
+If quick-complete is enabled in **Dashboard preferences**, use the check button on a chore to complete it immediately as the signed-in user.
+
+Other connected devices update automatically after a chore is completed.
+
+## Rooms and Focus Zones
+
+Rooms help keep the dashboard from turning into one giant wall of chores. Use **Rooms and focus zones** from the dashboard menu.
+
+You can:
+
+- Add rooms such as Kitchen, Bathroom, Downstairs toilet, Bedroom, Garden, or Hallway.
+- Add a chore directly inside a room.
+- Use suggested chores for common room needs.
+- Duplicate a room and all of its chores.
+- Filter the dashboard to one room at a time.
+- Delete a room without deleting its chores. Existing chores are kept, but become unassigned from that room.
+
+When creating or editing a chore, you can select one or more rooms. If multiple rooms are selected, the app creates independent chore copies. Completing the floor in the kitchen will not complete the floor in the bathroom.
+
+Room suggestions are meant to reduce setup friction. For example:
+
+- Most rooms can suggest floors, windows, dusting, bins, and a general tidy/reset.
+- Kitchen-like rooms also suggest counters/stovetop and fridge checks.
+- Bathroom or toilet-like rooms also suggest toilet cleaning and sink/mirror cleaning.
+- Bedroom-like rooms also suggest changing bedding.
+
+Duplicating a room copies the room setup and creates new chore records for the new room. Completion history is not copied, so the duplicated room starts fresh.
+
+## Settings and Configuration
+
+### Dashboard Preferences
+
+All users can open **Dashboard preferences** from the dashboard menu.
+
+You can configure:
+
+- Whether quick-complete buttons are shown.
+- Whether completion micro-celebrations are enabled.
+- Which dashboard filter opens by default.
+
+These preferences are stored locally on the device.
+
+### App Settings
+
+Admin users can open **App settings** from the dashboard menu.
+
+Use this for household-level settings such as:
+
+- Mobile reminders.
+- Reminder triggers.
+- Quiet hours and escalation.
+- Home Assistant due digest settings.
+- Placeholder server push settings.
+
+### House Configuration
+
+Open **House Configuration** from the dashboard menu to manage server connections.
+
+You can:
+
+- Add a house or backend server.
+- Edit a house name or server URL.
+- Store an optional per-house Home Assistant webhook.
+- Test the server connection.
+- Switch houses from the dashboard house icon.
+
+## Notifications and Home Assistant
 
 ### Mobile Reminders
 
@@ -201,17 +296,7 @@ True server push while the app is fully closed needs:
 
 The current app is prepared for this, but today the working direct-app notification system is local mobile notifications.
 
-### Home Assistant Due Digest
-
-If you use Home Assistant, the backend can send a digest of due chores to a Home Assistant webhook.
-
-You can enable this in **App settings** and enter the webhook URL there. You can also use environment variables, described below.
-
-## Optional Home Assistant Setup
-
-Home Assistant is optional. The app works without it.
-
-### Completion Webhook
+### Home Assistant Completion Webhook
 
 To notify Home Assistant whenever a chore is completed, add this to `backend/.env`:
 
@@ -227,7 +312,7 @@ docker compose restart pocketbase
 
 The webhook receives chore details, who completed it, and notes.
 
-### Due Reminder Digest
+### Home Assistant Due Digest
 
 To let the backend send due chore reminders to Home Assistant, configure this in **App settings** or add a fallback webhook URL:
 
@@ -263,40 +348,7 @@ Manual test:
 curl -X POST "http://localhost:9010/api/householdchores/reminders/send?token=use-a-long-random-secret"
 ```
 
-## Use From Other Devices
-
-Find your server IP address.
-
-On Windows:
-
-```powershell
-ipconfig
-```
-
-On Linux or macOS:
-
-```bash
-ip addr
-```
-
-Then open the web app from another device on the same network:
-
-```text
-http://YOUR-SERVER-IP:9011
-```
-
-Example:
-
-```text
-http://192.168.1.20:9011
-```
-
-Make sure both ports are reachable:
-
-- `9011` for the web app.
-- `9010` for the backend API.
-
-## Install the App From the Website
+## Install From the Website
 
 The server includes a friendly install page:
 
@@ -323,7 +375,34 @@ On desktop:
 - Chrome, Edge, and some other browsers may show an install icon in the address bar.
 - You can also use the browser menu and choose **Install Household Chores** when available.
 
-### Why HTTPS Matters
+### Use From Other Devices
+
+Find your server IP address.
+
+On Windows:
+
+```powershell
+ipconfig
+```
+
+On Linux or macOS:
+
+```bash
+ip addr
+```
+
+Then open the web app from another device on the same network:
+
+```text
+http://YOUR-SERVER-IP:9011
+```
+
+Make sure both ports are reachable:
+
+- `9011` for the web app.
+- `9010` for the backend API.
+
+## HTTPS Setup
 
 Install prompts and modern web-app features work best over HTTPS. Browsers usually allow `localhost` for testing, but phones and tablets on your home network should use HTTPS for the smoothest install experience.
 
@@ -331,7 +410,7 @@ If you open the web app through HTTPS, the backend API should also be HTTPS. Oth
 
 ### Simple HTTPS Test With npm
 
-This option is useful for testing the install flow. For regular family use, a trusted certificate through Caddy, Nginx Proxy Manager, Tailscale, or another reverse proxy will be nicer.
+This option is useful for testing the install flow. For regular household use, a trusted certificate through Caddy, Nginx Proxy Manager, Tailscale, Apache, or another reverse proxy will be nicer.
 
 1. Install Node.js.
 
@@ -341,7 +420,7 @@ This option is useful for testing the install flow. For regular family use, a tr
 docker compose up -d --build
 ```
 
-3. Edit `frontend/web/config.js` and set the backend URL to the HTTPS API proxy you will use:
+3. Edit `frontend/web/config.js` and set the backend URL to the HTTPS API proxy:
 
 ```javascript
 window.HOUSEHOLDCHORES_CONFIG = {
@@ -390,21 +469,21 @@ In this setup:
 - Apache sends `/api/` and `/_/` traffic to PocketBase on `http://127.0.0.1:9010`.
 - The app can use `https://chores.example.com` as its backend URL because PocketBase is available under the same HTTPS host.
 
-1. Enable the Apache modules:
+Enable Apache modules:
 
 ```bash
 sudo a2enmod ssl proxy proxy_http headers rewrite
 sudo systemctl restart apache2
 ```
 
-2. Get a trusted certificate. The most common option is Let's Encrypt:
+Get a trusted certificate. The most common option is Let's Encrypt:
 
 ```bash
 sudo apt install certbot python3-certbot-apache
 sudo certbot --apache -d chores.example.com
 ```
 
-3. Edit `frontend/web/config.js` before rebuilding the web container:
+Edit `frontend/web/config.js` before rebuilding the web container:
 
 ```javascript
 window.HOUSEHOLDCHORES_CONFIG = {
@@ -412,13 +491,13 @@ window.HOUSEHOLDCHORES_CONFIG = {
 };
 ```
 
-4. Rebuild the web container:
+Rebuild the web container:
 
 ```powershell
 docker compose up -d --build web
 ```
 
-5. Use an Apache virtual host like this:
+Use an Apache virtual host like this:
 
 ```apache
 <VirtualHost *:80>
@@ -447,14 +526,14 @@ docker compose up -d --build web
 </VirtualHost>
 ```
 
-6. Reload Apache:
+Reload Apache:
 
 ```bash
 sudo apachectl configtest
 sudo systemctl reload apache2
 ```
 
-7. Open:
+Open:
 
 ```text
 https://chores.example.com/install.html
@@ -464,7 +543,7 @@ The order of the `ProxyPass` rules matters. Keep `/api/` and `/_/` above `/`.
 
 ### What Setup Information Carries Over?
 
-For the installed web app, also called the PWA, the setup is almost automatic:
+For the installed web app, also called the PWA, setup is almost automatic:
 
 - It opens the same website it was installed from.
 - It uses the same `frontend/web/config.js` backend URL.
@@ -477,7 +556,7 @@ For the downloaded Android APK, setup is not automatic yet:
 - The native app currently uses its built-in default backend URL or whatever the user configures in House Configuration.
 - A future improvement would be a QR code or deep link such as `householdchores://configure?server=https://chores.example.com` that opens the app and pre-fills the server URL.
 
-So: **PWA install is already easy to connect**, but **APK auto-configuration needs a small deep-link onboarding feature**.
+PWA install is already easy to connect, but APK auto-configuration needs a small deep-link onboarding feature.
 
 ## Android App
 
@@ -549,7 +628,9 @@ flutter build ios --release
 
 You will also need Apple signing configured in Xcode.
 
-## Updating
+## Updating and Backup
+
+### Updating
 
 From the project root:
 
@@ -560,7 +641,7 @@ docker compose up -d --build
 
 Your data is stored in `backend/pb_data/` and is not deleted by rebuilding containers.
 
-## Backup
+### Backup
 
 The most important folder is:
 
@@ -586,6 +667,28 @@ Start again after copying:
 docker compose up -d
 ```
 
+## Automated Checks
+
+Run these from `frontend/`:
+
+```powershell
+flutter pub get
+flutter analyze
+flutter test
+```
+
+The test suite currently covers:
+
+- Chore model parsing and assignee behavior.
+- Chore scheduling interval behavior.
+- Dashboard preference persistence.
+
+For a quick regression pass before a change is merged, run:
+
+```powershell
+flutter test
+```
+
 ## Troubleshooting
 
 ### The web app says it cannot connect to the server
@@ -604,13 +707,31 @@ curl http://localhost:9010/api/health
 
 If you are using another device, make sure it can reach your server IP on port `9010`.
 
+### The browser still shows an old interface after updating
+
+The web build includes deployment metadata and an update helper that clears stale app-shell caches automatically. If one browser is already stuck on an older service worker, open:
+
+```text
+http://YOUR-SERVER-IP:9011/cache-reset.html
+```
+
+For local testing, use:
+
+```text
+http://localhost:9011/cache-reset.html
+```
+
+This unregisters the old service worker, clears web caches for the app, and redirects back to the newest build.
+
 ### I cannot log in
 
 Make sure you created an app user in the `users` collection. The PocketBase superuser from `backend/.env` is for the admin panel, not for normal app login.
 
-### I do not see admin buttons
+### I do not see admin options
 
 Open the PocketBase admin panel, go to `users`, and confirm your user has `is_admin = true`.
+
+Admin options are in the dashboard menu. The house icon is only for switching houses.
 
 ### Mobile notifications do not appear
 
@@ -686,4 +807,16 @@ householdchores/
       screens/
       services/
       l10n/
+    test/
 ```
+
+## Roadmap Ideas
+
+Some suggestions are intentionally not implemented yet because they need a product choice or heavier platform work:
+
+- **Leaderboard or personal habit tracking**: useful motivation, but the app should choose a tone first. Competitive scoring can be fun for roommates and annoying for families.
+- **Adaptive cleanliness decay**: powerful, but needs richer completion history, occupancy/context inputs, and careful rules so it does not feel unpredictable.
+- **Expense tracking**: useful for cleaning supplies and shared houses, but it introduces finance records, settlement logic, and permissions.
+- **Offline mode**: valuable for weak Wi-Fi areas, but PocketBase write conflict handling and local cache reconciliation need careful design.
+- **Voice entry and GPS-aware reminders**: useful, but they require platform integrations and privacy decisions.
+- **APK auto-configuration**: likely worth doing with a QR code or deep link so a downloaded APK can pre-fill the server URL.

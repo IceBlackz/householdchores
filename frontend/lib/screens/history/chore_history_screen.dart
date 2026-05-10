@@ -27,8 +27,15 @@ class _ChoreHistoryScreenState extends State<ChoreHistoryScreen> {
 
   Future<void> _fetchLogs() async {
     try {
-      final logs = await context.read<ChoreService>().fetchLogs(widget.chore.id);
-      if (mounted) setState(() { _logs = logs; _isLoading = false; });
+      final logs = await context.read<ChoreService>().fetchLogs(
+        widget.chore.id,
+      );
+      if (mounted) {
+        setState(() {
+          _logs = logs;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -51,59 +58,76 @@ class _ChoreHistoryScreenState extends State<ChoreHistoryScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _logs.isEmpty
-              ? Center(child: Text(l10n.noHistoryYet))
-              : ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _logs.length,
-                  separatorBuilder: (context, index) => const Divider(),
-                  itemBuilder: (context, index) {
-                    final log = _logs[index];
-                    final completedOn = _formatDate(log.created);
-                    final completedBy = log.completedByName ?? l10n.unknownUser;
+          ? Center(child: Text(l10n.noHistoryYet))
+          : ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: _logs.length,
+              separatorBuilder: (context, index) => const Divider(),
+              itemBuilder: (context, index) {
+                final log = _logs[index];
+                final completedOn = _formatDate(log.created);
+                final completedBy = log.completedByName ?? l10n.unknownUser;
 
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.check_circle, color: Colors.green, size: 20),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  completedOn,
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              Text(
-                                completedBy,
-                                style: TextStyle(color: Colors.teal.shade700),
-                              ),
-                            ],
+                          const Icon(
+                            Icons.check_circle,
+                            color: Colors.green,
+                            size: 20,
                           ),
-                          if (log.notes.isNotEmpty) ...[
-                            const SizedBox(height: 6),
-                            Text(log.notes, style: const TextStyle(fontStyle: FontStyle.italic)),
-                          ],
-                          if (log.photoBeforeFilename != null || log.photoAfterFilename != null) ...[
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                if (log.photoBeforeFilename != null)
-                                  _PhotoThumb(url: _photoUrl(log, log.photoBeforeFilename!), label: 'Before'),
-                                if (log.photoBeforeFilename != null && log.photoAfterFilename != null)
-                                  const SizedBox(width: 8),
-                                if (log.photoAfterFilename != null)
-                                  _PhotoThumb(url: _photoUrl(log, log.photoAfterFilename!), label: 'After'),
-                              ],
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              completedOn,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ],
+                          ),
+                          Text(
+                            completedBy,
+                            style: TextStyle(color: Colors.teal.shade700),
+                          ),
                         ],
                       ),
-                    );
-                  },
-                ),
+                      if (log.notes.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          log.notes,
+                          style: const TextStyle(fontStyle: FontStyle.italic),
+                        ),
+                      ],
+                      if (log.photoBeforeFilename != null ||
+                          log.photoAfterFilename != null) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            if (log.photoBeforeFilename != null)
+                              _PhotoThumb(
+                                url: _photoUrl(log, log.photoBeforeFilename!),
+                                label: 'Before',
+                              ),
+                            if (log.photoBeforeFilename != null &&
+                                log.photoAfterFilename != null)
+                              const SizedBox(width: 8),
+                            if (log.photoAfterFilename != null)
+                              _PhotoThumb(
+                                url: _photoUrl(log, log.photoAfterFilename!),
+                                label: 'After',
+                              ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              },
+            ),
     );
   }
 
@@ -113,10 +137,20 @@ class _ChoreHistoryScreenState extends State<ChoreHistoryScreen> {
   }
 
   String _monthName(int m) => const [
-        '',
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-      ][m];
+    '',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ][m];
 }
 
 class _PhotoThumb extends StatelessWidget {

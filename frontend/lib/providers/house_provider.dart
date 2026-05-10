@@ -114,7 +114,8 @@ class HouseProvider extends ChangeNotifier {
     return newId;
   }
 
-  Future<void> editHouse(String houseId, {
+  Future<void> editHouse(
+    String houseId, {
     String? name,
     String? url,
     String? haWebhookUrl,

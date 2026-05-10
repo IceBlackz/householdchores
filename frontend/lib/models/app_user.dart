@@ -17,9 +17,9 @@ class AppUser {
 
   factory AppUser.fromRecord(RecordModel record) {
     return AppUser(
-      id:      record.id,
-      name:    record.getStringValue('name'),
-      email:   record.getStringValue('email'),
+      id: record.id,
+      name: record.getStringValue('name'),
+      email: record.getStringValue('email'),
       isAdmin: record.getBoolValue('is_admin'),
     );
   }

@@ -1,6 +1,7 @@
 import 'package:pocketbase/pocketbase.dart';
 import 'app_user.dart';
 import '../constants/app_constants.dart';
+import 'room.dart';
 
 class Chore {
   const Chore({
@@ -18,6 +19,7 @@ class Chore {
     this.seasonWinterOverride,
     this.defaultAssignee,
     this.onetimeOnlyAssignee,
+    this.room,
   });
 
   final String id;
@@ -36,6 +38,7 @@ class Chore {
 
   final AppUser? defaultAssignee;
   final AppUser? onetimeOnlyAssignee;
+  final Room? room;
 
   bool get hasOneTimeOverride => onetimeOnlyAssignee != null;
   AppUser? get activeAssignee => onetimeOnlyAssignee ?? defaultAssignee;
@@ -46,10 +49,18 @@ class Chore {
   int? seasonOverride(String season) {
     int? v;
     switch (season) {
-      case 'Spring': v = seasonSpringOverride; break;
-      case 'Summer': v = seasonSummerOverride; break;
-      case 'Autumn': v = seasonAutumnOverride; break;
-      case 'Winter': v = seasonWinterOverride; break;
+      case 'Spring':
+        v = seasonSpringOverride;
+        break;
+      case 'Summer':
+        v = seasonSummerOverride;
+        break;
+      case 'Autumn':
+        v = seasonAutumnOverride;
+        break;
+      case 'Winter':
+        v = seasonWinterOverride;
+        break;
     }
     return (v != null && v > 0) ? v : null;
   }
@@ -95,6 +106,12 @@ class Chore {
       if (oto != null) onetimeOnlyAssignee = AppUser.fromRecord(oto);
     } catch (_) {}
 
+    Room? room;
+    try {
+      final expandedRoom = record.get<RecordModel?>('expand.room');
+      if (expandedRoom != null) room = Room.fromRecord(expandedRoom);
+    } catch (_) {}
+
     final createdStr = record.getStringValue('created');
     final created = createdStr.isNotEmpty
         ? DateTime.parse(createdStr)
@@ -113,12 +130,21 @@ class Chore {
           : IntervalUnits.days,
       season: record.getStringValue('season'),
       created: created,
-      seasonSpringOverride: nullIfZero(record.getIntValue('season_spring_override')),
-      seasonSummerOverride: nullIfZero(record.getIntValue('season_summer_override')),
-      seasonAutumnOverride: nullIfZero(record.getIntValue('season_autumn_override')),
-      seasonWinterOverride: nullIfZero(record.getIntValue('season_winter_override')),
+      seasonSpringOverride: nullIfZero(
+        record.getIntValue('season_spring_override'),
+      ),
+      seasonSummerOverride: nullIfZero(
+        record.getIntValue('season_summer_override'),
+      ),
+      seasonAutumnOverride: nullIfZero(
+        record.getIntValue('season_autumn_override'),
+      ),
+      seasonWinterOverride: nullIfZero(
+        record.getIntValue('season_winter_override'),
+      ),
       defaultAssignee: defaultAssignee,
       onetimeOnlyAssignee: onetimeOnlyAssignee,
+      room: room,
     );
   }
 }

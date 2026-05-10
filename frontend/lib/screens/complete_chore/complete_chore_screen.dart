@@ -72,20 +72,22 @@ class _CompleteChoreScreenState extends State<CompleteChoreScreen> {
     try {
       final currentUserId = context.read<AuthService>().currentUserId ?? '';
       await context.read<ChoreProvider>().completeChore(
-            widget.chore.id,
-            currentUserId,
-            completedBy: _selectedUserId,
-            photoBefore: _beforePhoto,
-            photoAfter: _afterPhoto,
-            notes: _notesController.text,
-          );
+        widget.chore.id,
+        currentUserId,
+        completedBy: _selectedUserId,
+        photoBefore: _beforePhoto,
+        photoAfter: _afterPhoto,
+        notes: _notesController.text,
+      );
       if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(l10n.failedToSubmit(e.toString())),
-          backgroundColor: Colors.red,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.failedToSubmit(e.toString())),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -100,8 +102,10 @@ class _CompleteChoreScreenState extends State<CompleteChoreScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          Text(l10n.markingTaskAsDone,
-              style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            l10n.markingTaskAsDone,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 24),
 
           // Completed-by picker — defaults to logged-in user
@@ -116,10 +120,12 @@ class _CompleteChoreScreenState extends State<CompleteChoreScreen> {
                 border: const OutlineInputBorder(),
               ),
               items: _users
-                  .map((u) => DropdownMenuItem(
-                        value: u.id,
-                        child: Text(u.displayName),
-                      ))
+                  .map(
+                    (u) => DropdownMenuItem(
+                      value: u.id,
+                      child: Text(u.displayName),
+                    ),
+                  )
                   .toList(),
               onChanged: (v) => setState(() => _selectedUserId = v),
             ),
@@ -128,17 +134,21 @@ class _CompleteChoreScreenState extends State<CompleteChoreScreen> {
           OutlinedButton.icon(
             onPressed: () => _pickImage(true),
             icon: const Icon(Icons.camera_alt),
-            label: Text(_beforePhoto == null
-                ? l10n.attachBeforePhoto
-                : l10n.beforePhotoSelected),
+            label: Text(
+              _beforePhoto == null
+                  ? l10n.attachBeforePhoto
+                  : l10n.beforePhotoSelected,
+            ),
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: () => _pickImage(false),
             icon: const Icon(Icons.camera_alt_outlined),
-            label: Text(_afterPhoto == null
-                ? l10n.attachAfterPhoto
-                : l10n.afterPhotoSelected),
+            label: Text(
+              _afterPhoto == null
+                  ? l10n.attachAfterPhoto
+                  : l10n.afterPhotoSelected,
+            ),
           ),
           const SizedBox(height: 24),
           TextField(
@@ -156,9 +166,12 @@ class _CompleteChoreScreenState extends State<CompleteChoreScreen> {
               : ElevatedButton(
                   onPressed: _submitLog,
                   style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.all(16)),
-                  child: Text(l10n.submitCompletion,
-                      style: const TextStyle(fontSize: 18)),
+                    padding: const EdgeInsets.all(16),
+                  ),
+                  child: Text(
+                    l10n.submitCompletion,
+                    style: const TextStyle(fontSize: 18),
+                  ),
                 ),
         ],
       ),

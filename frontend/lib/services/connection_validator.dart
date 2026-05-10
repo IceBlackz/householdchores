@@ -13,7 +13,8 @@ class ConnectionValidator {
   /// Validates a house configuration.
   /// Returns true if the server is a valid householdchores server.
   /// Returns false if validation fails.
-  static Future<bool> validateHouse(String url, {
+  static Future<bool> validateHouse(
+    String url, {
     int timeoutMs = defaultTimeout,
     int retryLimit = defaultRetryLimit,
   }) async {
