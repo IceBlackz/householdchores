@@ -1,0 +1,24 @@
+services:
+  householdchores:
+    image: iceblackz/householdchores:latest
+    container_name: householdchores
+    restart: unless-stopped
+    ports:
+      - "9011:80"
+      - "9010:9010"
+    environment:
+      ADMIN_EMAIL: "admin@example.com"
+      ADMIN_PASSWORD: "change-this-password"
+      # Optional Home Assistant integration:
+      # HA_WEBHOOK_URL: "http://your-home-assistant:8123/api/webhook/your-completion-webhook-id"
+      # HA_DUE_WEBHOOK_URL: "http://your-home-assistant:8123/api/webhook/your-due-reminder-webhook-id"
+      # HA_DUE_REMINDER_CRON: "0 8 * * *"
+      # HA_ACTION_SECRET: "replace-with-a-long-random-secret"
+      # PUBLIC_BACKEND_URL: "http://your-server:9010"
+    volumes:
+      - ./pb_data:/pb/pb_data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9010/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

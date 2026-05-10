@@ -10,6 +10,7 @@ Your data stays on your own server. There are no subscriptions and no required c
 - [How It Works](#how-it-works)
 - [Requirements](#requirements)
 - [Quick Start](#quick-start)
+- [One-File Docker Install](#one-file-docker-install)
 - [First App User](#first-app-user)
 - [Everyday Use](#everyday-use)
 - [Rooms and Focus Zones](#rooms-and-focus-zones)
@@ -119,6 +120,54 @@ When it finishes, open:
 
 - Web app: http://localhost:9011
 - PocketBase admin panel: http://localhost:9010/_/
+
+## One-File Docker Install
+
+If you do not want to clone and build the repository, use the published all-in-one image.
+
+Create a `docker-compose.yml` file:
+
+```yaml
+services:
+  householdchores:
+    image: iceblackz/householdchores:latest
+    container_name: householdchores
+    restart: unless-stopped
+    ports:
+      - "9011:80"
+      - "9010:9010"
+    environment:
+      ADMIN_EMAIL: "admin@example.com"
+      ADMIN_PASSWORD: "change-this-password"
+    volumes:
+      - ./pb_data:/pb/pb_data
+```
+
+Start it:
+
+```powershell
+docker compose up -d
+```
+
+Open:
+
+- Web app: http://localhost:9011
+- PocketBase admin panel: http://localhost:9010/_/
+
+Your persistent data is stored in the local `pb_data/` folder next to the compose file.
+
+Optional Home Assistant environment variables are supported in the same container:
+
+```yaml
+environment:
+  ADMIN_EMAIL: "admin@example.com"
+  ADMIN_PASSWORD: "change-this-password"
+  HA_WEBHOOK_URL: "http://your-home-assistant:8123/api/webhook/your-completion-webhook-id"
+  HA_DUE_WEBHOOK_URL: "http://your-home-assistant:8123/api/webhook/your-due-reminder-webhook-id"
+  HA_DUE_REMINDER_CRON: "0 8 * * *"
+  HA_ACTION_SECRET: "replace-with-a-long-random-secret"
+  PUBLIC_BACKEND_URL: "http://your-server:9010"
+```
 
 ## First App User
 
