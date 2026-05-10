@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../config/app_config.dart';
 import '../../l10n/app_localizations.dart';
@@ -63,6 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text,
       );
       if (!mounted) return;
+      TextInput.finishAutofillContext();
       final name = context.read<AuthService>().currentUserName ?? 'User';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -247,18 +249,32 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 24),
             _buildVersionBanner(l10n),
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(labelText: l10n.email),
-              keyboardType: TextInputType.emailAddress,
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _passwordController,
-              decoration: InputDecoration(labelText: l10n.password),
-              obscureText: true,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _login(),
+            AutofillGroup(
+              child: Column(
+                children: [
+                  TextField(
+                    controller: _emailController,
+                    decoration: InputDecoration(labelText: l10n.email),
+                    keyboardType: TextInputType.emailAddress,
+                    autofillHints: const [
+                      AutofillHints.username,
+                      AutofillHints.email,
+                    ],
+                    textInputAction: TextInputAction.next,
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _passwordController,
+                    decoration: InputDecoration(labelText: l10n.password),
+                    obscureText: true,
+                    enableSuggestions: false,
+                    autocorrect: false,
+                    autofillHints: const [AutofillHints.password],
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _login(),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 32),
             _isLoading
