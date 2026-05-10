@@ -772,6 +772,18 @@ http://localhost:9011/cache-reset.html
 
 This unregisters the old service worker, clears web caches for the app, and redirects back to the newest build.
 
+### Login shows a version warning behind a reverse proxy
+
+If you use the all-in-one Docker image behind Nginx Proxy Manager, point NPM to the container's web port, usually `80`. The app should then use the same public HTTPS origin for API calls, for example:
+
+```text
+https://chores.example.com/api/householdchores/version
+```
+
+You do not need to expose backend port `9010` to the internet for normal use with the all-in-one image. It can stay internal or LAN-only.
+
+If you run the older two-container development compose file instead, either proxy `/api/` and `/_/` to the PocketBase container yourself, or set `frontend/web/config.js` to the public backend URL before rebuilding the web container.
+
 ### I cannot log in
 
 Make sure you created an app user in the `users` collection. The PocketBase superuser from `backend/.env` is for the admin panel, not for normal app login.

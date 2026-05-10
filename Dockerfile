@@ -62,7 +62,7 @@ COPY --from=pocketbase /pb/pocketbase /pb/pocketbase
 COPY backend/pb_migrations /pb/pb_migrations
 COPY backend/pb_hooks /pb/pb_hooks
 COPY --from=web-builder /app/build/web /usr/share/nginx/html
-COPY backend/nginx.conf /etc/nginx/conf.d/default.conf
+COPY backend/nginx.all-in-one.conf /etc/nginx/conf.d/default.conf
 COPY backend/all-in-one-entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
