@@ -13,6 +13,7 @@ This document is for future AI/developer sessions. It summarizes the current arc
 | Auth | PocketBase email/password auth |
 | Localization | Flutter gen-l10n with EN/NL/ES ARB files |
 | Notifications | Local Android/iOS notifications plus optional Home Assistant webhook digest |
+| Install/distribution | PWA install page, optional Android APK download, Apache/npm HTTPS docs |
 
 ## Project Structure
 
@@ -22,6 +23,7 @@ householdchores/
   Dockerfile
   README.md
   AI_CONTEXT.md
+  https-proxy.example.json
   backend/
     .env.example
     entrypoint.sh
@@ -46,6 +48,11 @@ householdchores/
       services/
         notification_service.dart
         settings_service.dart
+    web/
+      config.js
+      install.html
+      manifest.json
+      downloads/.gitkeep
 ```
 
 ## Docker Rules
@@ -66,6 +73,7 @@ Important:
 - `backend/pb_data/` is persistent application data. Never delete it unless the user explicitly asks.
 - `backend/pb_migrations/` and `backend/pb_hooks/` are mounted into the PocketBase container.
 - `.dockerignore` must exclude Flutter generated folders such as `frontend/.dart_tool/` and build output.
+- `backend/nginx.conf` serves Flutter web, `/install.html`, `/config.js`, and APK files from `/downloads/`.
 
 ## Backend Startup
 
@@ -169,6 +177,46 @@ Important behavior:
 
 Server push is not implemented yet. The settings model has `serverPushEnabled`, but true push still needs FCM/APNs credentials, device-token registration, and a backend sender.
 
+## Install, PWA, and APK Distribution
+
+The web app includes a static install page:
+
+```text
+frontend/web/install.html
+```
+
+Served URL:
+
+```text
+http://server:9011/install.html
+```
+
+Important behavior:
+
+- `frontend/web/manifest.json` has app metadata for installable PWA behavior.
+- `frontend/web/config.js` optionally overrides the web backend URL at runtime.
+- If `config.js` has an empty `backendUrl`, web defaults to the same host on port `9010`.
+- For HTTPS reverse proxies, set `backendUrl` to the HTTPS API/base URL before rebuilding the web container.
+- The install page links to `/downloads/householdchores-latest.apk`.
+- `frontend/web/downloads/.gitkeep` keeps the folder present, but APK files are ignored by git.
+
+PWA versus APK setup:
+
+- PWA installs open the same website they were installed from and reuse `config.js`, so connection setup is easy.
+- APK installs do not automatically know which website they were downloaded from. A future QR/deep-link onboarding flow would be needed to prefill the server URL.
+- Never put usernames or passwords in install URLs.
+
+HTTPS options documented in `README.md`:
+
+- npm test proxy using `https-proxy.example.json` and `npx local-ssl-proxy`.
+- Apache reverse proxy with Let's Encrypt.
+
+Apache is the preferred lightweight production-ish path when available because one HTTPS hostname can serve both the web app and PocketBase paths:
+
+- `/` -> web container on `9011`
+- `/api/` -> PocketBase on `9010`
+- `/_/` -> PocketBase admin on `9010`
+
 ## Home Assistant Hooks
 
 `backend/pb_hooks/notify_homeassistant.pb.js` can notify Home Assistant when a chore is completed.
@@ -204,7 +252,7 @@ Uses the shared PocketBase client. Do not create a separate PocketBase instance 
 
 ### HouseProvider
 
-Tracks configured houses and active house. Web auto-detects backend URL from the current host and port `9010`.
+Tracks configured houses and active house. Web backend URL comes from `frontend/web/config.js` when configured, otherwise it auto-detects the current host with backend port `9010`.
 
 ### ChoreProvider
 
@@ -249,7 +297,26 @@ docker compose up -d --build
 docker compose ps
 curl http://localhost:9010/api/health
 curl http://localhost:9011/
+curl http://localhost:9011/install.html
+curl http://localhost:9011/config.js
 ```
+
+Useful browser smoke tests:
+
+- Open `http://localhost:9011/` and confirm the login page renders.
+- Open `http://localhost:9011/install.html` and confirm the install page shows the detected backend URL.
+
+## Release Script
+
+`release.ps1`:
+
+- Bumps app/server version references.
+- Builds the Android APK.
+- Copies the release APK to the repository root as `householdchores-vX.Y.Z.apk`.
+- Copies the latest APK to `frontend/web/downloads/householdchores-latest.apk` for server downloads.
+- Commits, tags, pushes, and optionally creates a GitHub release if `gh` is installed.
+
+APK files are ignored by git.
 
 ## Common Gotchas
 
@@ -261,3 +328,4 @@ curl http://localhost:9011/
 - PocketBase `getFirstListItem()` throws on 404. Use `getFullList()` when an empty result is expected.
 - Capture Flutter `BuildContext` dependencies before `await`, then check `mounted` after awaits.
 - For Flutter web uploads, use bytes-based multipart files.
+- Keep cleanup simple: stale local planning/tool files should not be committed unless they document real project behavior.
