@@ -17,8 +17,11 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _emailFocusNode = FocusNode();
+  final _passwordFocusNode = FocusNode();
   bool _isLoading = false;
   VersionCheckResult? _versionResult;
 
@@ -26,13 +29,19 @@ class _LoginScreenState extends State<LoginScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
     super.dispose();
   }
 
   Future<void> _login() async {
-    TextInput.finishAutofillContext(shouldSave: false);
-    await Future<void>.delayed(const Duration(milliseconds: 80));
+    if (_isLoading) return;
+
+    FocusManager.instance.primaryFocus?.unfocus();
+    await Future<void>.delayed(const Duration(milliseconds: 150));
     if (!mounted) return;
+
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() {
       _isLoading = true;
@@ -254,30 +263,44 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 24),
             _buildVersionBanner(l10n),
             AutofillGroup(
-              child: Column(
-                children: [
-                  TextField(
-                    controller: _emailController,
-                    decoration: InputDecoration(labelText: l10n.email),
-                    keyboardType: TextInputType.emailAddress,
-                    autofillHints: const [
-                      AutofillHints.email,
-                      AutofillHints.username,
-                    ],
-                    textInputAction: TextInputAction.next,
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _passwordController,
-                    decoration: InputDecoration(labelText: l10n.password),
-                    obscureText: true,
-                    enableSuggestions: false,
-                    autocorrect: false,
-                    autofillHints: const [AutofillHints.password],
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => _login(),
-                  ),
-                ],
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    TextFormField(
+                      key: const ValueKey('login-username-field'),
+                      controller: _emailController,
+                      focusNode: _emailFocusNode,
+                      decoration: InputDecoration(labelText: l10n.email),
+                      keyboardType: TextInputType.emailAddress,
+                      autofillHints: const [AutofillHints.username],
+                      autocorrect: false,
+                      textInputAction: TextInputAction.next,
+                      validator: (value) =>
+                          value == null || value.trim().isEmpty
+                          ? l10n.requiredField
+                          : null,
+                      onFieldSubmitted: (_) =>
+                          _passwordFocusNode.requestFocus(),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      key: const ValueKey('login-password-field'),
+                      controller: _passwordController,
+                      focusNode: _passwordFocusNode,
+                      decoration: InputDecoration(labelText: l10n.password),
+                      obscureText: true,
+                      enableSuggestions: false,
+                      autocorrect: false,
+                      autofillHints: const [AutofillHints.password],
+                      textInputAction: TextInputAction.done,
+                      validator: (value) => value == null || value.isEmpty
+                          ? l10n.requiredField
+                          : null,
+                      onFieldSubmitted: (_) => _login(),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 32),
