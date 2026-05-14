@@ -8,6 +8,7 @@ RecordModel _userRecord({
   String id = 'user1',
   String name = '',
   String email = 'test@example.com',
+  bool isCleaner = false,
 }) {
   return RecordModel.fromJson({
     'id': id,
@@ -15,6 +16,7 @@ RecordModel _userRecord({
     'collectionName': 'users',
     'name': name,
     'email': email,
+    'is_cleaner': isCleaner,
   });
 }
 
@@ -28,6 +30,7 @@ RecordModel _choreRecord({
   Map<String, dynamic>? defaultAssigneeJson,
   Map<String, dynamic>? onetimeOnlyAssigneeJson,
   Map<String, dynamic>? roomJson,
+  bool cleanerEnabled = false,
 }) {
   final expand = <String, dynamic>{};
   if (defaultAssigneeJson != null) {
@@ -51,6 +54,7 @@ RecordModel _choreRecord({
     'season': season,
     'default_assignee': defaultAssigneeJson?['id'] ?? '',
     'onetimeonly_assignee': onetimeOnlyAssigneeJson?['id'] ?? '',
+    'cleaner_enabled': cleanerEnabled,
     'room': roomJson?['id'] ?? '',
     'created': '2024-01-01 10:00:00.000Z',
     if (expand.isNotEmpty) 'expand': expand,
@@ -61,12 +65,14 @@ Map<String, dynamic> _userJson({
   String id = 'u1',
   String name = '',
   String email = 'user@home.local',
+  bool isCleaner = false,
 }) => {
   'id': id,
   'collectionId': '_pb_users_auth_',
   'collectionName': 'users',
   'name': name,
   'email': email,
+  'is_cleaner': isCleaner,
 };
 
 Map<String, dynamic> _roomJson({
@@ -95,6 +101,20 @@ void main() {
       );
       expect(user.displayName, 'alice@home.com');
     });
+
+    test('hasCleanerRole is true only for non-admin cleaners', () {
+      final cleaner = AppUser.fromRecord(_userRecord(isCleaner: true));
+      final adminCleaner = AppUser(
+        id: 'u2',
+        name: 'Admin',
+        email: 'admin@home.local',
+        isAdmin: true,
+        isCleaner: true,
+      );
+
+      expect(cleaner.hasCleanerRole, isTrue);
+      expect(adminCleaner.hasCleanerRole, isFalse);
+    });
   });
 
   group('Chore.fromRecord', () {
@@ -106,6 +126,12 @@ void main() {
       expect(chore.intervalDesiredDays, 7);
       expect(chore.intervalMaxDays, 14);
       expect(chore.season, 'All');
+      expect(chore.cleanerEnabled, isFalse);
+    });
+
+    test('parses cleaner visibility flag', () {
+      final chore = Chore.fromRecord(_choreRecord(cleanerEnabled: true));
+      expect(chore.cleanerEnabled, isTrue);
     });
 
     test('activeAssignee is null when no assignees set', () {

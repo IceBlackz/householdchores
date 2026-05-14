@@ -24,19 +24,21 @@ class _ConfigurationScreenState extends State<ConfigurationScreen>
   final _nameController = TextEditingController();
   final _urlController = TextEditingController();
   final _haWebhookController = TextEditingController();
+  House? _editingHouse;
   String? _validationError;
   bool _isChecking = false;
   bool _isValid = false;
 
-  bool get _isEditing => widget.houseToEdit != null;
+  bool get _isEditing => _editingHouse != null;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _editingHouse = widget.houseToEdit;
 
     if (_isEditing) {
-      final h = widget.houseToEdit!;
+      final h = _editingHouse!;
       _nameController.text = h.name;
       _urlController.text = h.url;
       _haWebhookController.text = h.haWebhookUrl ?? '';
@@ -102,7 +104,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen>
       if (_isEditing) {
         // FIX (session 2): edit the passed house, not the app-level active house
         await houseProvider.editHouse(
-          widget.houseToEdit!.id,
+          _editingHouse!.id,
           name: name,
           url: url,
           haWebhookUrl: haWebhookUrl,
@@ -280,9 +282,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              _isEditing
-                  ? 'Editing: ${widget.houseToEdit!.name}'
-                  : l10n.addNewHouse,
+              _isEditing ? 'Editing: ${_editingHouse!.name}' : l10n.addNewHouse,
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 16),
@@ -387,15 +387,17 @@ class _ConfigurationScreenState extends State<ConfigurationScreen>
     );
   }
 
-  /// Pushes a new ConfigurationScreen pre-filled with this house's data.
-  Future<void> _editHouse(House house) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        // FIX (session 2): pass houseToEdit so the new screen's initState
-        // fills the right controllers instead of opening blank
-        builder: (_) => ConfigurationScreen(houseToEdit: house),
-      ),
-    );
-    // Editing calls houseProvider.editHouse() directly, no extra refresh needed
+  /// Opens the form tab pre-filled with this house's data.
+  void _editHouse(House house) {
+    setState(() {
+      _editingHouse = house;
+      _nameController.text = house.name;
+      _urlController.text = house.url;
+      _haWebhookController.text = house.haWebhookUrl ?? '';
+      _validationError = null;
+      _isChecking = false;
+      _isValid = false;
+    });
+    _tabController.animateTo(1);
   }
 }

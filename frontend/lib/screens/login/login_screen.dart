@@ -30,6 +30,10 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
+    TextInput.finishAutofillContext(shouldSave: false);
+    await Future<void>.delayed(const Duration(milliseconds: 80));
+    if (!mounted) return;
+
     setState(() {
       _isLoading = true;
       _versionResult = null;
@@ -64,7 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text,
       );
       if (!mounted) return;
-      TextInput.finishAutofillContext();
+      TextInput.finishAutofillContext(shouldSave: true);
       final name = context.read<AuthService>().currentUserName ?? 'User';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -257,8 +261,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     decoration: InputDecoration(labelText: l10n.email),
                     keyboardType: TextInputType.emailAddress,
                     autofillHints: const [
-                      AutofillHints.username,
                       AutofillHints.email,
+                      AutofillHints.username,
                     ],
                     textInputAction: TextInputAction.next,
                   ),

@@ -35,12 +35,16 @@ Your data stays on your own server. There are no subscriptions and no required c
 - Create a chore directly inside a room.
 - Assign a chore to multiple rooms as independent copies.
 - Duplicate a room with its tasks, useful for rooms like multiple toilets or bedrooms.
+- Choose a visual room icon and reuse it in dashboard room filters.
 - Add suggested default chores for a room, such as floors, windows, dusting, bins, kitchen counters, or toilet cleaning.
 - Assign chores to household members.
 - Temporarily assign a chore to someone else for one round.
+- Mark chores for a separate cleaner list.
+- Add cleaner users with a limited completion-only dashboard.
 - See what is assigned to you, due today, overdue, or past a hard deadline.
+- Use a compact phone-friendly dashboard with task text above action buttons.
 - Set desired intervals and hard deadlines in days, weeks, months, quarters, or years.
-- Add seasonal behavior and season-specific interval overrides.
+- Add season-specific interval overrides that apply automatically from the current date.
 - Complete chores for yourself or on behalf of another household member.
 - Add notes and before/after photos when completing a chore.
 - Use optional quick-complete buttons for fast check-ins.
@@ -199,6 +203,8 @@ Useful filters:
 - **Attention**: chores that should be done soon or are already late.
 - **Critical**: chores past the hard deadline.
 
+The dashboard uses the current date to apply seasonal interval overrides automatically. There is no manual season selector on the home screen.
+
 Use the house icon to switch houses. Use the menu icon for users, app settings, dashboard preferences, house configuration, language selection, help, install instructions, and logout.
 
 ### Add Household Members
@@ -211,6 +217,7 @@ Use this to:
 - Change display names.
 - Reset or set passwords.
 - Give someone admin access.
+- Mark someone as a cleaner, which gives them a limited list of cleaner-enabled chores only.
 - Remove users that are no longer needed.
 
 Keep at least one admin user.
@@ -226,11 +233,17 @@ For each chore you can set:
 - Desired interval, such as every 7 days.
 - Hard deadline, such as maximum 14 days.
 - Interval unit: days, weeks, months, quarters, or years.
-- Season behavior, for chores that only matter in certain seasons.
-- Season-specific interval overrides.
+- Season-specific interval overrides, which are applied automatically based on the current date.
 - Room assignment. Selecting multiple rooms creates separate chore copies.
 - Default assignee.
 - One-time assignee, for the next completion only.
+- Whether the chore appears in the cleaner list.
+
+### Cleaner Access
+
+Cleaner users have a focused dashboard. They can only see chores where **Show in cleaner list** is enabled, and they can complete those chores with optional notes or before/after photos.
+
+Cleaner users cannot add, edit, delete, or configure chores, rooms, users, houses, or app settings. This keeps the shared household setup separate from outside help or occasional cleaning support.
 
 ### Complete Chores
 
@@ -254,6 +267,7 @@ Rooms help keep the dashboard from turning into one giant wall of chores. Use **
 You can:
 
 - Add rooms such as Kitchen, Bathroom, Downstairs toilet, Bedroom, Garden, or Hallway.
+- Pick a room icon from the visual room picture chooser.
 - Add a chore directly inside a room.
 - Use suggested chores for common room needs.
 - Duplicate a room and all of its chores.
@@ -304,7 +318,7 @@ Open **House Configuration** from the dashboard menu to manage server connection
 You can:
 
 - Add a house or backend server.
-- Edit a house name or server URL.
+- Edit a house name or server URL from the same configuration screen.
 - Store an optional per-house Home Assistant webhook.
 - Test the server connection.
 - Switch houses from the dashboard house icon.
@@ -617,7 +631,9 @@ The install page links to:
 http://YOUR-SERVER-IP:9011/downloads/householdchores-latest.apk
 ```
 
-That file exists after a release build copies an APK into `frontend/web/downloads/householdchores-latest.apk` and the web container is rebuilt.
+That file is generated automatically during the Docker image build and served by the web container. Running `docker compose up -d --build` is enough for a locally built Docker install to expose the APK download.
+
+The release script still copies signed release APKs into the same web downloads path for tagged releases.
 
 ### Build an APK
 

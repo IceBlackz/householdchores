@@ -9,7 +9,7 @@ class PocketBaseService {
   factory PocketBaseService() => _instance;
 
   /// PocketBase client instance.
-  late final PocketBase client;
+  late PocketBase client;
 
   /// Initializes the service with a house URL.
   /// @param baseUrl The PocketBase server URL (from the active house).

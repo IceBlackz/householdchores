@@ -28,6 +28,12 @@ class AuthService {
     return AppUser.fromRecord(record).isAdmin;
   }
 
+  bool get isCurrentUserCleaner {
+    final record = _pb.authStore.record;
+    if (record == null) return false;
+    return AppUser.fromRecord(record).hasCleanerRole;
+  }
+
   String? get currentUserName {
     final record = _pb.authStore.record;
     if (record == null) return null;

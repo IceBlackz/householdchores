@@ -37,6 +37,15 @@ class _CompleteChoreScreenState extends State<CompleteChoreScreen> {
   Future<void> _fetchUsers() async {
     try {
       final currentUserId = context.read<AuthService>().currentUserId;
+      if (context.read<AuthService>().isCurrentUserCleaner) {
+        if (mounted) {
+          setState(() {
+            _selectedUserId = currentUserId;
+            _loadingUsers = false;
+          });
+        }
+        return;
+      }
       final users = await context.read<ChoreService>().fetchUsers();
       if (mounted) {
         setState(() {
@@ -97,6 +106,8 @@ class _CompleteChoreScreenState extends State<CompleteChoreScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final authService = context.read<AuthService>();
+    final isCleaner = authService.isCurrentUserCleaner;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.completeChore(widget.chore.title))),
       body: ListView(
@@ -111,6 +122,15 @@ class _CompleteChoreScreenState extends State<CompleteChoreScreen> {
           // Completed-by picker — defaults to logged-in user
           if (_loadingUsers)
             const LinearProgressIndicator()
+          else if (isCleaner)
+            InputDecorator(
+              decoration: InputDecoration(
+                labelText: l10n.completedBy,
+                prefixIcon: const Icon(Icons.cleaning_services_outlined),
+                border: const OutlineInputBorder(),
+              ),
+              child: Text(authService.currentUserName ?? l10n.unknownUser),
+            )
           else
             DropdownButtonFormField<String>(
               initialValue: _selectedUserId,

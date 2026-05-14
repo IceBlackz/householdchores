@@ -115,9 +115,14 @@ class ChoreService {
     await _pb
         .collection(Collections.choreLogs)
         .create(body: body, files: files);
-    await _pb
-        .collection(Collections.chores)
-        .update(choreId, body: {'onetimeonly_assignee': ''});
+    final currentUser = _pb.authStore.record;
+    final isCleaner =
+        currentUser != null && AppUser.fromRecord(currentUser).hasCleanerRole;
+    if (!isCleaner) {
+      await _pb
+          .collection(Collections.chores)
+          .update(choreId, body: {'onetimeonly_assignee': ''});
+    }
   }
 
   // --------------------------------------------------------------------------
@@ -136,6 +141,7 @@ class ChoreService {
     required String email,
     required String password,
     bool isAdmin = false,
+    bool isCleaner = false,
   }) async {
     final record = await _pb
         .collection(Collections.users)
@@ -146,6 +152,7 @@ class ChoreService {
             'password': password,
             'passwordConfirm': password,
             'is_admin': isAdmin,
+            'is_cleaner': isCleaner,
           },
         );
     return AppUser.fromRecord(record);
@@ -156,12 +163,14 @@ class ChoreService {
     String? name,
     String? email,
     bool? isAdmin,
+    bool? isCleaner,
     String? password,
   }) async {
     final body = <String, dynamic>{};
     if (name != null) body['name'] = name;
     if (email != null) body['email'] = email;
     if (isAdmin != null) body['is_admin'] = isAdmin;
+    if (isCleaner != null) body['is_cleaner'] = isCleaner;
     if (password != null && password.isNotEmpty) {
       body['password'] = password;
       body['passwordConfirm'] = password;
@@ -228,6 +237,7 @@ class ChoreService {
       'season': chore.season,
       'default_assignee': chore.defaultAssignee?.id ?? '',
       'onetimeonly_assignee': '',
+      'cleaner_enabled': chore.cleanerEnabled,
       'season_spring_override': chore.seasonSpringOverride ?? 0,
       'season_summer_override': chore.seasonSummerOverride ?? 0,
       'season_autumn_override': chore.seasonAutumnOverride ?? 0,

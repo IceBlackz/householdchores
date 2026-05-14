@@ -27,6 +27,11 @@ RUN flutter build web --release --wasm --pwa-strategy=none && \
       '});' \
       > build/web/flutter_service_worker.js
 
+# Also build the Android APK and publish it through the web install page.
+RUN flutter build apk --release && \
+    mkdir -p build/web/downloads && \
+    cp build/app/outputs/flutter-apk/app-release.apk build/web/downloads/householdchores-latest.apk
+
 FROM nginx:alpine AS web
 
 COPY --from=web-builder /app/build/web /usr/share/nginx/html

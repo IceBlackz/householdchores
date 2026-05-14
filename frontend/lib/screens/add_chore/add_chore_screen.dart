@@ -104,6 +104,7 @@ class _AddChoreScreenState extends State<AddChoreScreen> {
   String? _selectedDefaultAssigneeId;
   String? _selectedOneTimeAssigneeId;
   final Set<String> _selectedRoomIds = {};
+  bool _cleanerEnabled = false;
   bool _isLoadingUsers = true;
   bool _isLoadingRooms = true;
   bool _isSaving = false;
@@ -136,6 +137,7 @@ class _AddChoreScreenState extends State<AddChoreScreen> {
       _selectedIntervalUnit = chore.intervalUnit;
       _selectedDefaultAssigneeId = chore.defaultAssignee?.id;
       _selectedOneTimeAssigneeId = chore.onetimeOnlyAssignee?.id;
+      _cleanerEnabled = chore.cleanerEnabled;
       if (chore.room != null) _selectedRoomIds.add(chore.room!.id);
       _springOverrideController.text = (chore.seasonSpringOverride ?? 0)
           .toString();
@@ -240,6 +242,7 @@ class _AddChoreScreenState extends State<AddChoreScreen> {
         'season': _selectedSeason,
         'default_assignee': _selectedDefaultAssigneeId ?? '',
         'onetimeonly_assignee': _selectedOneTimeAssigneeId ?? '',
+        'cleaner_enabled': _cleanerEnabled,
         'season_spring_override': _parseOverride(_springOverrideController),
         'season_summer_override': _parseOverride(_summerOverrideController),
         'season_autumn_override': _parseOverride(_autumnOverrideController),
@@ -424,6 +427,18 @@ class _AddChoreScreenState extends State<AddChoreScreen> {
                     setState(() => _selectedOneTimeAssigneeId = v),
               ),
             ],
+            const SizedBox(height: 16),
+            Card(
+              child: SwitchListTile(
+                secondary: const Icon(Icons.cleaning_services_outlined),
+                title: const Text('Show in cleaner list'),
+                subtitle: const Text(
+                  'Cleaner users can view and complete this chore.',
+                ),
+                value: _cleanerEnabled,
+                onChanged: (value) => setState(() => _cleanerEnabled = value),
+              ),
+            ),
             const SizedBox(height: 16),
             if (_isLoadingRooms)
               const Center(child: LinearProgressIndicator())

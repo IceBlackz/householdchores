@@ -115,6 +115,7 @@ Important fields:
 - `season_summer_override`
 - `season_autumn_override`
 - `season_winter_override`
+- `cleaner_enabled`: exposes the chore to users with the cleaner role
 
 ### `chore_logs`
 
@@ -132,6 +133,14 @@ PocketBase auth collection with app-specific fields:
 
 - `name`
 - `is_admin`
+- `is_cleaner`: limited role for cleaner users
+
+Cleaner users:
+
+- Have a restricted dashboard with no add/edit/delete/config/admin controls.
+- Can only list/view chores where `cleaner_enabled = true`.
+- Complete chores as themselves; the completion screen does not expose the completed-by picker.
+- Are intentionally mutually exclusive with admin users in the app UI.
 
 ### `app_settings`
 
@@ -198,6 +207,7 @@ Important behavior:
 - If `config.js` has an empty `backendUrl`, web defaults to the same host on port `9010`.
 - For HTTPS reverse proxies, set `backendUrl` to the HTTPS API/base URL before rebuilding the web container.
 - The install page links to `/downloads/householdchores-latest.apk`.
+- The Docker build runs `flutter build apk --release` and copies the APK into `build/web/downloads/householdchores-latest.apk`, so the web container serves an APK without a manual release step.
 - `frontend/web/downloads/.gitkeep` keeps the folder present, but APK files are ignored by git.
 
 PWA versus APK setup:

@@ -13,6 +13,7 @@ class Chore {
     required this.intervalUnit,
     required this.season,
     required this.created,
+    this.cleanerEnabled = false,
     this.seasonSpringOverride,
     this.seasonSummerOverride,
     this.seasonAutumnOverride,
@@ -30,6 +31,7 @@ class Chore {
   final String intervalUnit;
   final String season;
   final DateTime created;
+  final bool cleanerEnabled;
 
   final int? seasonSpringOverride;
   final int? seasonSummerOverride;
@@ -130,6 +132,7 @@ class Chore {
           : IntervalUnits.days,
       season: record.getStringValue('season'),
       created: created,
+      cleanerEnabled: record.getBoolValue('cleaner_enabled'),
       seasonSpringOverride: nullIfZero(
         record.getIntValue('season_spring_override'),
       ),

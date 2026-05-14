@@ -163,11 +163,13 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                         ),
                       ),
                     ),
-                    title: Row(
+                    title: Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Text(user.displayName),
-                        if (isSelf) ...[
-                          const SizedBox(width: 6),
+                        if (isSelf)
                           Chip(
                             label: Text(
                               l10n.youLabel,
@@ -177,9 +179,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                             visualDensity: VisualDensity.compact,
                             backgroundColor: Colors.blue.shade50,
                           ),
-                        ],
-                        if (user.isAdmin) ...[
-                          const SizedBox(width: 6),
+                        if (user.isAdmin)
                           Chip(
                             label: Text(
                               l10n.adminBadge,
@@ -190,7 +190,21 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                             backgroundColor: Colors.teal.shade50,
                             side: BorderSide(color: Colors.teal.shade200),
                           ),
-                        ],
+                        if (user.hasCleanerRole)
+                          Chip(
+                            avatar: const Icon(
+                              Icons.cleaning_services_outlined,
+                              size: 14,
+                            ),
+                            label: const Text(
+                              'Cleaner',
+                              style: TextStyle(fontSize: 11),
+                            ),
+                            padding: EdgeInsets.zero,
+                            visualDensity: VisualDensity.compact,
+                            backgroundColor: Colors.blueGrey.shade50,
+                            side: BorderSide(color: Colors.blueGrey.shade200),
+                          ),
                       ],
                     ),
                     subtitle: Text(
@@ -244,6 +258,7 @@ class _UserDialogState extends State<_UserDialog> {
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
   bool _isAdmin = false;
+  bool _isCleaner = false;
   bool _isSaving = false;
   bool _changePassword = false;
 
@@ -256,6 +271,7 @@ class _UserDialogState extends State<_UserDialog> {
       _nameController.text = widget.user!.name;
       _emailController.text = widget.user!.email;
       _isAdmin = widget.user!.isAdmin;
+      _isCleaner = widget.user!.hasCleanerRole;
     }
   }
 
@@ -281,6 +297,7 @@ class _UserDialogState extends State<_UserDialog> {
           name: _nameController.text.trim(),
           email: _emailController.text.trim(),
           isAdmin: _isAdmin,
+          isCleaner: _isCleaner,
           password: (_changePassword && _passwordController.text.isNotEmpty)
               ? _passwordController.text
               : null,
@@ -299,6 +316,7 @@ class _UserDialogState extends State<_UserDialog> {
           email: _emailController.text.trim(),
           password: _passwordController.text,
           isAdmin: _isAdmin,
+          isCleaner: _isCleaner,
         );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -392,7 +410,22 @@ class _UserDialogState extends State<_UserDialog> {
                   title: Text(l10n.adminBadge),
                   subtitle: Text(l10n.adminBadgeSubtitle),
                   value: _isAdmin,
-                  onChanged: (v) => setState(() => _isAdmin = v),
+                  onChanged: (v) => setState(() {
+                    _isAdmin = v;
+                    if (v) _isCleaner = false;
+                  }),
+                  contentPadding: EdgeInsets.zero,
+                ),
+                SwitchListTile(
+                  title: const Text('Cleaner'),
+                  subtitle: const Text(
+                    'Can only view and complete chores marked for cleaners',
+                  ),
+                  value: _isCleaner,
+                  onChanged: (v) => setState(() {
+                    _isCleaner = v;
+                    if (v) _isAdmin = false;
+                  }),
                   contentPadding: EdgeInsets.zero,
                 ),
               ],

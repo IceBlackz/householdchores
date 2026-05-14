@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../models/room.dart';
 import '../../models/room_chore_suggestion.dart';
 import '../../services/chore_service.dart';
+import '../../utils/room_icons.dart';
 import '../add_chore/add_chore_screen.dart';
 
 class RoomsScreen extends StatefulWidget {
@@ -47,44 +48,65 @@ class _RoomsScreenState extends State<RoomsScreen> {
   Future<void> _showRoomDialog({Room? room}) async {
     final service = context.read<ChoreService>();
     final nameController = TextEditingController(text: room?.name ?? '');
-    final iconController = TextEditingController(text: room?.icon ?? '');
+    var selectedIconKey = room?.icon.isNotEmpty == true ? room!.icon : 'room';
     final isEditing = room != null;
 
     final saved = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(isEditing ? 'Edit room' : 'Add room'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              autofocus: true,
-              decoration: const InputDecoration(
-                labelText: 'Room name',
-                hintText: 'Kitchen, Toilet, Bedroom...',
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(isEditing ? 'Edit room' : 'Add room'),
+          content: SizedBox(
+            width: 420,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    autofocus: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Room name',
+                      hintText: 'Kitchen, Toilet, Bedroom...',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Room picture',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: roomIconOptions.map((option) {
+                      final selected = option.key == selectedIconKey;
+                      return ChoiceChip(
+                        avatar: Icon(option.icon, size: 18),
+                        label: Text(option.label),
+                        selected: selected,
+                        onSelected: (_) => setDialogState(() {
+                          selectedIconKey = option.key;
+                        }),
+                      );
+                    }).toList(),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: iconController,
-              decoration: const InputDecoration(
-                labelText: 'Icon label (optional)',
-                hintText: 'kitchen, wc, bed...',
-              ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('Save'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Save'),
-          ),
-        ],
       ),
     );
 
@@ -93,13 +115,9 @@ class _RoomsScreenState extends State<RoomsScreen> {
     if (name.isEmpty) return;
 
     if (isEditing) {
-      await service.updateRoom(
-        room.id,
-        name: name,
-        icon: iconController.text.trim(),
-      );
+      await service.updateRoom(room.id, name: name, icon: selectedIconKey);
     } else {
-      await service.createRoom(name: name, icon: iconController.text.trim());
+      await service.createRoom(name: name, icon: selectedIconKey);
     }
     await _loadRooms();
   }
@@ -334,16 +352,7 @@ class _RoomsScreenState extends State<RoomsScreen> {
     );
   }
 
-  IconData _iconForRoom(Room room) {
-    final value = '${room.icon} ${room.name}'.toLowerCase();
-    if (value.contains('kitchen')) return Icons.kitchen;
-    if (value.contains('toilet') || value.contains('wc')) return Icons.wc;
-    if (value.contains('bath')) return Icons.bathtub;
-    if (value.contains('bed')) return Icons.bed;
-    if (value.contains('living')) return Icons.weekend;
-    if (value.contains('garden')) return Icons.yard;
-    return Icons.meeting_room_outlined;
-  }
+  IconData _iconForRoom(Room room) => iconForRoom(room);
 }
 
 class _EmptyRooms extends StatelessWidget {

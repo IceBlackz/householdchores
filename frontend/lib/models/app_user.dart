@@ -6,12 +6,16 @@ class AppUser {
     required this.name,
     required this.email,
     this.isAdmin = false,
+    this.isCleaner = false,
   });
 
   final String id;
   final String name;
   final String email;
   final bool isAdmin;
+  final bool isCleaner;
+
+  bool get hasCleanerRole => isCleaner && !isAdmin;
 
   String get displayName => name.isNotEmpty ? name : email;
 
@@ -21,6 +25,7 @@ class AppUser {
       name: record.getStringValue('name'),
       email: record.getStringValue('email'),
       isAdmin: record.getBoolValue('is_admin'),
+      isCleaner: record.getBoolValue('is_cleaner'),
     );
   }
 }

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import '../../constants/app_constants.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/dashboard_preferences.dart';
 import '../../models/chore.dart';
@@ -15,6 +14,7 @@ import '../../services/auth_service.dart';
 import '../../services/chore_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/settings_service.dart';
+import '../../utils/room_icons.dart';
 import '../admin/app_settings_screen.dart';
 import '../add_chore/add_chore_screen.dart';
 import '../admin/user_management_screen.dart';
@@ -435,6 +435,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     List<Chore> chores,
     ChoreProvider provider,
     String currentUserId,
+    bool isCleaner,
   ) {
     final roomFiltered = _activeRoomId == null
         ? chores
@@ -442,6 +443,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     switch (_workloadFilter) {
       case _DashboardFilter.mine:
+        if (isCleaner) return roomFiltered;
         return roomFiltered
             .where((c) => c.activeAssigneeId == currentUserId)
             .toList();
@@ -461,8 +463,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final houseProvider = context.watch<HouseProvider>();
     final authService = context.read<AuthService>();
     final currentUserId = authService.currentUserId ?? '';
+    final isCleaner = authService.isCurrentUserCleaner;
     final chores = provider.chores;
-    final visibleChores = _filteredChores(chores, provider, currentUserId);
+    final visibleChores = _filteredChores(
+      chores,
+      provider,
+      currentUserId,
+      isCleaner,
+    );
     final assignedToMe = chores
         .where((c) => c.activeAssigneeId == currentUserId)
         .length;
@@ -470,39 +478,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
         .where((c) => _isDueOrOverdue(c, provider))
         .length;
     final critical = chores.where((c) => _isCritical(c, provider)).length;
-    final activeFilter = provider.seasonFilter;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.householdChores),
         actions: [
           // House switcher
-          PopupMenuButton<String>(
-            tooltip: l10n.activeHouse,
-            icon: const Icon(Icons.home_outlined),
-            onSelected: (houseId) async {
-              await _switchHouse(houseId);
-            },
-            itemBuilder: (_) => houseProvider.houses
-                .map(
-                  (house) => PopupMenuItem(
-                    value: house.id,
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.home,
-                          color: house.id == houseProvider.activeHouseId
-                              ? Colors.teal
-                              : Colors.grey,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(child: Text(house.name)),
-                      ],
+          if (!isCleaner)
+            PopupMenuButton<String>(
+              tooltip: l10n.activeHouse,
+              icon: const Icon(Icons.home_outlined),
+              onSelected: (houseId) async {
+                await _switchHouse(houseId);
+              },
+              itemBuilder: (_) => houseProvider.houses
+                  .map(
+                    (house) => PopupMenuItem(
+                      value: house.id,
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.home,
+                            color: house.id == houseProvider.activeHouseId
+                                ? Colors.teal
+                                : Colors.grey,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(child: Text(house.name)),
+                        ],
+                      ),
                     ),
-                  ),
-                )
-                .toList(),
-          ),
+                  )
+                  .toList(),
+            ),
           PopupMenuButton<_DashboardMenuAction>(
             tooltip: 'App menu',
             icon: const Icon(Icons.menu),
@@ -521,27 +529,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   value: _DashboardMenuAction.appSettings,
                   child: _MenuItem(icon: Icons.tune, label: 'App settings'),
                 ),
-              const PopupMenuItem(
-                value: _DashboardMenuAction.dashboardPreferences,
-                child: _MenuItem(
-                  icon: Icons.dashboard_customize_outlined,
-                  label: 'Dashboard preferences',
+              if (!isCleaner)
+                const PopupMenuItem(
+                  value: _DashboardMenuAction.dashboardPreferences,
+                  child: _MenuItem(
+                    icon: Icons.dashboard_customize_outlined,
+                    label: 'Dashboard preferences',
+                  ),
                 ),
-              ),
-              const PopupMenuItem(
-                value: _DashboardMenuAction.rooms,
-                child: _MenuItem(
-                  icon: Icons.meeting_room_outlined,
-                  label: 'Rooms and focus zones',
+              if (!isCleaner)
+                const PopupMenuItem(
+                  value: _DashboardMenuAction.rooms,
+                  child: _MenuItem(
+                    icon: Icons.meeting_room_outlined,
+                    label: 'Rooms and focus zones',
+                  ),
                 ),
-              ),
-              PopupMenuItem(
-                value: _DashboardMenuAction.configureHouses,
-                child: _MenuItem(
-                  icon: Icons.home_work_outlined,
-                  label: l10n.houseConfiguration,
+              if (!isCleaner)
+                PopupMenuItem(
+                  value: _DashboardMenuAction.configureHouses,
+                  child: _MenuItem(
+                    icon: Icons.home_work_outlined,
+                    label: l10n.houseConfiguration,
+                  ),
                 ),
-              ),
               const PopupMenuDivider(),
               PopupMenuItem(
                 value: _DashboardMenuAction.language,
@@ -572,25 +583,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
         ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(52),
-          child: _SeasonFilterBar(
-            activeFilter: activeFilter,
-            onFilterChanged: (season) {
-              context.read<ChoreProvider>().setSeasonFilter(season);
-            },
-          ),
-        ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await Navigator.of(context).push<bool>(
-            MaterialPageRoute(builder: (_) => const AddChoreScreen()),
-          );
-          if (result == true) await _refresh();
-        },
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: isCleaner
+          ? null
+          : FloatingActionButton(
+              onPressed: () async {
+                final result = await Navigator.of(context).push<bool>(
+                  MaterialPageRoute(builder: (_) => const AddChoreScreen()),
+                );
+                if (result == true) await _refresh();
+              },
+              child: const Icon(Icons.add),
+            ),
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : provider.error != null
@@ -618,27 +622,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     userName: authService.currentUserName,
                   ),
                   if (chores.isEmpty)
-                    _EmptyDashboard(
-                      isAdmin: authService.isCurrentUserAdmin,
-                      onAddChore: () async {
-                        final result = await Navigator.of(context).push<bool>(
-                          MaterialPageRoute(
-                            builder: (_) => const AddChoreScreen(),
-                          ),
-                        );
-                        if (result == true) await _refresh();
-                      },
-                      onManageUsers: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const UserManagementScreen(),
-                        ),
-                      ),
-                      onConfigureHouse: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const ConfigurationScreen(),
-                        ),
-                      ),
-                    )
+                    isCleaner
+                        ? const _CleanerEmptyState()
+                        : _EmptyDashboard(
+                            isAdmin: authService.isCurrentUserAdmin,
+                            onAddChore: () async {
+                              final result = await Navigator.of(context)
+                                  .push<bool>(
+                                    MaterialPageRoute(
+                                      builder: (_) => const AddChoreScreen(),
+                                    ),
+                                  );
+                              if (result == true) await _refresh();
+                            },
+                            onManageUsers: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const UserManagementScreen(),
+                              ),
+                            ),
+                            onConfigureHouse: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const ConfigurationScreen(),
+                              ),
+                            ),
+                          )
                   else ...[
                     _DashboardStats(
                       assignedToMe: assignedToMe,
@@ -647,18 +654,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       total: chores.length,
                     ),
                     _WorkloadFilterBar(
-                      selected: _workloadFilter,
+                      selected:
+                          isCleaner && _workloadFilter == _DashboardFilter.mine
+                          ? _DashboardFilter.all
+                          : _workloadFilter,
+                      showMineFilter: !isCleaner,
                       onSelected: (filter) {
                         setState(() => _workloadFilter = filter);
                       },
                     ),
-                    _RoomFilterBar(
-                      rooms: _rooms,
-                      activeRoomId: _activeRoomId,
-                      onChanged: (roomId) {
-                        setState(() => _activeRoomId = roomId);
-                      },
-                    ),
+                    if (!isCleaner)
+                      _RoomFilterBar(
+                        rooms: _rooms,
+                        activeRoomId: _activeRoomId,
+                        onChanged: (roomId) {
+                          setState(() => _activeRoomId = roomId);
+                        },
+                      ),
                     if (visibleChores.isEmpty)
                       const _FilteredEmptyState()
                     else
@@ -688,22 +700,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               _dashboardPreferences.quickCompleteEnabled
                               ? () => _quickCompleteChore(chore)
                               : null,
-                          onEdit: () async {
-                            final result = await Navigator.of(context)
-                                .push<bool>(
+                          onEdit: isCleaner
+                              ? null
+                              : () async {
+                                  final result = await Navigator.of(context)
+                                      .push<bool>(
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              AddChoreScreen(chore: chore),
+                                        ),
+                                      );
+                                  if (result == true && mounted) {
+                                    await _refresh();
+                                  }
+                                },
+                          onDelete: isCleaner
+                              ? null
+                              : () => _confirmDelete(chore),
+                          onHistory: isCleaner
+                              ? null
+                              : () => Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (_) =>
-                                        AddChoreScreen(chore: chore),
+                                        ChoreHistoryScreen(chore: chore),
                                   ),
-                                );
-                            if (result == true && mounted) await _refresh();
-                          },
-                          onDelete: () => _confirmDelete(chore),
-                          onHistory: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => ChoreHistoryScreen(chore: chore),
-                            ),
-                          ),
+                                ),
                         );
                       }),
                   ],
@@ -904,42 +925,126 @@ class _StatTile extends StatelessWidget {
 }
 
 class _WorkloadFilterBar extends StatelessWidget {
-  const _WorkloadFilterBar({required this.selected, required this.onSelected});
+  const _WorkloadFilterBar({
+    required this.selected,
+    required this.showMineFilter,
+    required this.onSelected,
+  });
 
   final _DashboardFilter selected;
+  final bool showMineFilter;
   final ValueChanged<_DashboardFilter> onSelected;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
+    final items = [
+      _FilterButtonData(
+        filter: _DashboardFilter.all,
+        icon: Icons.list_alt,
+        label: l10n.filterAll,
+      ),
+      if (showMineFilter)
+        _FilterButtonData(
+          filter: _DashboardFilter.mine,
+          icon: Icons.person,
+          label: l10n.filterMine,
+        ),
+      _FilterButtonData(
+        filter: _DashboardFilter.attention,
+        icon: Icons.flag_outlined,
+        label: l10n.filterNeedsAttention,
+      ),
+      _FilterButtonData(
+        filter: _DashboardFilter.critical,
+        icon: Icons.warning_amber_rounded,
+        label: l10n.filterCritical,
+      ),
+    ];
+
+    return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-      child: SegmentedButton<_DashboardFilter>(
-        segments: [
-          ButtonSegment(
-            value: _DashboardFilter.all,
-            icon: const Icon(Icons.list_alt),
-            label: Text(l10n.filterAll),
-          ),
-          ButtonSegment(
-            value: _DashboardFilter.mine,
-            icon: const Icon(Icons.person),
-            label: Text(l10n.filterMine),
-          ),
-          ButtonSegment(
-            value: _DashboardFilter.attention,
-            icon: const Icon(Icons.flag_outlined),
-            label: Text(l10n.filterNeedsAttention),
-          ),
-          ButtonSegment(
-            value: _DashboardFilter.critical,
-            icon: const Icon(Icons.warning_amber_rounded),
-            label: Text(l10n.filterCritical),
-          ),
+      child: Row(
+        children: [
+          for (var index = 0; index < items.length; index++)
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  right: index == items.length - 1 ? 0 : 6,
+                ),
+                child: _FilterButton(
+                  data: items[index],
+                  selected: selected == items[index].filter,
+                  onSelected: onSelected,
+                ),
+              ),
+            ),
         ],
-        selected: {selected},
-        onSelectionChanged: (selection) => onSelected(selection.first),
+      ),
+    );
+  }
+}
+
+class _FilterButtonData {
+  const _FilterButtonData({
+    required this.filter,
+    required this.icon,
+    required this.label,
+  });
+
+  final _DashboardFilter filter;
+  final IconData icon;
+  final String label;
+}
+
+class _FilterButton extends StatelessWidget {
+  const _FilterButton({
+    required this.data,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final _FilterButtonData data;
+  final bool selected;
+  final ValueChanged<_DashboardFilter> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: data.label,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () => onSelected(data.filter),
+        child: Container(
+          height: 44,
+          decoration: BoxDecoration(
+            color: selected
+                ? colorScheme.primaryContainer
+                : colorScheme.surface,
+            border: Border.all(
+              color: selected
+                  ? colorScheme.primary
+                  : colorScheme.outlineVariant,
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(data.icon, size: 17),
+              const SizedBox(height: 1),
+              Text(
+                data.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -978,7 +1083,7 @@ class _RoomFilterBar extends StatelessWidget {
             (room) => Padding(
               padding: const EdgeInsets.only(right: 8),
               child: FilterChip(
-                avatar: const Icon(Icons.meeting_room_outlined, size: 16),
+                avatar: Icon(iconForRoom(room), size: 16),
                 label: Text(room.name),
                 selected: activeRoomId == room.id,
                 onSelected: (_) =>
@@ -1163,6 +1268,39 @@ class _FilteredEmptyState extends StatelessWidget {
   }
 }
 
+class _CleanerEmptyState extends StatelessWidget {
+  const _CleanerEmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 42, 24, 24),
+      child: Column(
+        children: [
+          Icon(
+            Icons.cleaning_services_outlined,
+            size: 44,
+            color: Colors.teal.shade700,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'No cleaner tasks yet',
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'A household admin can add chores to this list by enabling the cleaner switch on a task.',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ---------------------------------------------------------------------------
 
 class _LanguageTile extends StatelessWidget {
@@ -1191,68 +1329,6 @@ class _LanguageTile extends StatelessWidget {
             const SizedBox(width: 18),
           const SizedBox(width: 8),
           Text(label),
-        ],
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-
-class _SeasonFilterBar extends StatelessWidget {
-  const _SeasonFilterBar({
-    required this.activeFilter,
-    required this.onFilterChanged,
-  });
-
-  final String? activeFilter;
-  final ValueChanged<String?> onFilterChanged;
-
-  String _label(AppLocalizations l10n, String season) {
-    switch (season) {
-      case 'Spring':
-        return l10n.spring;
-      case 'Summer':
-        return l10n.summer;
-      case 'Autumn':
-        return l10n.autumn;
-      case 'Winter':
-        return l10n.winter;
-      default:
-        return l10n.allSeasons;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return SizedBox(
-      height: 48,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: FilterChip(
-              label: Text(l10n.allSeasons),
-              selected: activeFilter == null,
-              onSelected: (_) => onFilterChanged(null),
-            ),
-          ),
-          ...AppConstants.seasons
-              .where((s) => s != 'All')
-              .map(
-                (season) => Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: FilterChip(
-                    label: Text(_label(l10n, season)),
-                    selected: activeFilter == season,
-                    onSelected: (_) =>
-                        onFilterChanged(activeFilter == season ? null : season),
-                  ),
-                ),
-              ),
         ],
       ),
     );
