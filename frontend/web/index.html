@@ -42,8 +42,36 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
-  <script src="config.js"></script>
-  <script src="app_update.js"></script>
-  <script src="flutter_bootstrap.js" async></script>
+  <script>
+    (async function () {
+      function loadScript(src) {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = src;
+          script.onload = resolve;
+          script.onerror = reject;
+          document.body.appendChild(script);
+        });
+      }
+
+      let buildId = Date.now().toString();
+      try {
+        const response = await fetch(`/version.json?ts=${Date.now()}`, {
+          cache: "no-store",
+        });
+        if (response.ok) {
+          const version = await response.json();
+          buildId = version.buildId || version.version || buildId;
+        }
+      } catch (_) {
+        // Fall back to a timestamp so cache-busting still works offline-ish.
+      }
+
+      const suffix = `?v=${encodeURIComponent(buildId)}`;
+      await loadScript(`config.js${suffix}`);
+      await loadScript(`app_update.js${suffix}`);
+      await loadScript(`flutter_bootstrap.js${suffix}`);
+    })();
+  </script>
 </body>
 </html>

@@ -52,7 +52,7 @@
 
       localStorage.removeItem("householdchores.webBuildId");
       document.getElementById("status").textContent = "Cache cleared. Opening the newest app...";
-      window.location.replace("/?cache-reset=" + Date.now());
+      window.location.replace("/?cache-reset=" + Date.now() + "&fresh=1");
     }
 
     reset().catch((error) => {

@@ -796,7 +796,7 @@ http://YOUR-SERVER-IP:9011/cache-reset.html
 
 If you run through HTTPS, use your HTTPS app address instead. After the reset, close and reopen the installed app from the home screen.
 
-The Docker image serves Flutter bootstrap files and the main app bundle with no-cache headers, so future deployments should not require this manual reset.
+The Docker image serves Flutter bootstrap files and the main app bundle with no-cache headers. The app shell also appends the current build ID to its startup scripts, so future deployments should not require this manual reset.
 
 ### Login shows a version warning behind a reverse proxy
 
