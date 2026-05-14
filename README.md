@@ -788,6 +788,14 @@ http://localhost:9011/cache-reset.html
 
 This unregisters the old service worker, clears web caches for the app, and redirects back to the newest build.
 
+On phones, especially installed Android PWAs, use the same full server address:
+
+```text
+http://YOUR-SERVER-IP:9011/cache-reset.html
+```
+
+If you run through HTTPS, use your HTTPS app address instead. After the reset, close and reopen the installed app from the home screen.
+
 ### Login shows a version warning behind a reverse proxy
 
 If you use the all-in-one Docker image behind Nginx Proxy Manager, point NPM to the container's web port, usually `80`. The app should then use the same public HTTPS origin for API calls, for example:
