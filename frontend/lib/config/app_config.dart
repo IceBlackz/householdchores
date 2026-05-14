@@ -3,7 +3,7 @@ import 'runtime_config.dart';
 
 class AppConfig {
   /// The current app version. Updated automatically by release.ps1.
-  static const String appVersion = '1.0.0';
+  static const String appVersion = '1.1.0';
 
   /// Minimum server MAJOR version this app requires.
   static const int minServerMajorVersion = 1;

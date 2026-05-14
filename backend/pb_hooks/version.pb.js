@@ -12,8 +12,8 @@
 
 routerAdd("GET", "/api/householdchores/version", (e) => {
   return e.json(200, {
-    version: "1.0.0",
-    minAppVersion: "1.0.0",
+    version: "1.1.0",
+    minAppVersion: "1.1.0",
     appName: "householdchores",
   });
 });
