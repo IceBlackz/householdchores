@@ -796,6 +796,8 @@ http://YOUR-SERVER-IP:9011/cache-reset.html
 
 If you run through HTTPS, use your HTTPS app address instead. After the reset, close and reopen the installed app from the home screen.
 
+The Docker image serves Flutter bootstrap files and the main app bundle with no-cache headers, so future deployments should not require this manual reset.
+
 ### Login shows a version warning behind a reverse proxy
 
 If you use the all-in-one Docker image behind Nginx Proxy Manager, point NPM to the container's web port, usually `80`. The app should then use the same public HTTPS origin for API calls, for example:
