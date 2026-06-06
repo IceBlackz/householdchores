@@ -6,6 +6,7 @@ import 'l10n/app_localizations.dart';
 import 'providers/chore_provider.dart';
 import 'providers/house_provider.dart';
 import 'providers/locale_provider.dart';
+import 'providers/theme_provider.dart';
 import 'screens/login/login_screen.dart';
 import 'services/auth_service.dart';
 import 'services/chore_service.dart';
@@ -19,20 +20,30 @@ void main() async {
 
   final localeProvider = LocaleProvider();
   await localeProvider.load();
+  final themeProvider = ThemeProvider();
+  await themeProvider.load();
 
-  runApp(HouseholdApp(localeProvider: localeProvider));
+  runApp(
+    HouseholdApp(localeProvider: localeProvider, themeProvider: themeProvider),
+  );
 }
 
 class HouseholdApp extends StatelessWidget {
-  const HouseholdApp({super.key, required this.localeProvider});
+  const HouseholdApp({
+    super.key,
+    required this.localeProvider,
+    required this.themeProvider,
+  });
 
   final LocaleProvider localeProvider;
+  final ThemeProvider themeProvider;
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<LocaleProvider>.value(value: localeProvider),
+        ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
         // FIX: use create: instead of .value() so the provider is properly disposed
         ChangeNotifierProvider<HouseProvider>(create: (_) => HouseProvider()),
         Provider<AuthService>(create: (_) => AuthService()),
@@ -43,8 +54,8 @@ class HouseholdApp extends StatelessWidget {
           update: (_, service, previous) => previous ?? ChoreProvider(service),
         ),
       ],
-      child: Consumer<LocaleProvider>(
-        builder: (context, localeProvider, _) => MaterialApp(
+      child: Consumer2<LocaleProvider, ThemeProvider>(
+        builder: (context, localeProvider, themeProvider, _) => MaterialApp(
           title: 'Household Chores',
           locale: localeProvider.locale,
           localizationsDelegates: const [
@@ -54,29 +65,41 @@ class HouseholdApp extends StatelessWidget {
             GlobalCupertinoLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.teal,
-              surface: const Color(0xFFFAFBF7),
-            ),
-            scaffoldBackgroundColor: const Color(0xFFFAFBF7),
-            useMaterial3: true,
-            appBarTheme: const AppBarTheme(
-              centerTitle: false,
-              surfaceTintColor: Colors.transparent,
-            ),
-            inputDecorationTheme: InputDecorationTheme(
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            floatingActionButtonTheme: const FloatingActionButtonThemeData(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(16)),
-              ),
-            ),
-          ),
+          theme: _buildTheme(Brightness.light),
+          darkTheme: _buildTheme(Brightness.dark),
+          themeMode: themeProvider.themeMode,
           home: const LoginScreen(),
+        ),
+      ),
+    );
+  }
+
+  ThemeData _buildTheme(Brightness brightness) {
+    final isDark = brightness == Brightness.dark;
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: Colors.teal,
+      brightness: brightness,
+      surface: isDark ? const Color(0xFF101816) : const Color(0xFFFAFBF7),
+    );
+
+    return ThemeData(
+      colorScheme: colorScheme,
+      scaffoldBackgroundColor: isDark
+          ? const Color(0xFF0B1210)
+          : const Color(0xFFFAFBF7),
+      useMaterial3: true,
+      appBarTheme: AppBarTheme(
+        centerTitle: false,
+        backgroundColor: colorScheme.surface,
+        foregroundColor: colorScheme.onSurface,
+        surfaceTintColor: Colors.transparent,
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(16)),
         ),
       ),
     );

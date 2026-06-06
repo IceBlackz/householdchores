@@ -883,17 +883,24 @@ class _StatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: color.shade50,
-        border: Border.all(color: color.shade100),
+        color: isDarkTheme
+            ? color.shade900.withValues(alpha: 0.34)
+            : color.shade50,
+        border: Border.all(
+          color: isDarkTheme
+              ? color.shade700.withValues(alpha: 0.5)
+              : color.shade100,
+        ),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Row(
           children: [
-            Icon(icon, color: color.shade700),
+            Icon(icon, color: isDarkTheme ? color.shade200 : color.shade700),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
@@ -1114,12 +1121,13 @@ class _EmptyDashboard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: Colors.blueGrey.shade100),
+          color: colorScheme.surfaceContainerLow,
+          border: Border.all(color: colorScheme.outlineVariant),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Padding(
@@ -1202,6 +1210,7 @@ class _GuideRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -1211,10 +1220,16 @@ class _GuideRow extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: color.shade50,
+              color: isDarkTheme
+                  ? color.shade900.withValues(alpha: 0.34)
+                  : color.shade50,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: color.shade700, size: 20),
+            child: Icon(
+              icon,
+              color: isDarkTheme ? color.shade200 : color.shade700,
+              size: 20,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(

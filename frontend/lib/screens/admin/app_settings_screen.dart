@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/notification_settings.dart';
 import '../../services/settings_service.dart';
+import '../../widgets/appearance_settings_section.dart';
 
 class AppSettingsScreen extends StatefulWidget {
   const AppSettingsScreen({super.key});
@@ -124,6 +125,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                const AppearanceSettingsSection(),
                 _SettingsSection(
                   title: 'Mobile reminders',
                   subtitle:

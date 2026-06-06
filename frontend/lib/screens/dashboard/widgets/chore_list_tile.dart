@@ -31,6 +31,9 @@ class ChoreListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDarkTheme = theme.brightness == Brightness.dark;
     final isAssignedToMe = chore.activeAssigneeId == currentUserId;
     final isOneTime = chore.hasOneTimeOverride;
     final assigneeName = chore.activeAssigneeName;
@@ -49,25 +52,29 @@ class ChoreListTile extends StatelessWidget {
     // Sentinel dates (year < 2000) = never completed
     if (dueDate.year < 2000) {
       dueText = l10n.neverCompleted;
-      statusColor = Colors.red.shade700;
+      statusColor = isDarkTheme ? Colors.red.shade300 : Colors.red.shade700;
       isCritical = false;
     } else if (daysUntilMax < 0) {
       // FIX: past the hard deadline — show critical state
       dueText = l10n.pastDeadline(daysUntilMax.abs());
-      statusColor = Colors.red.shade900;
+      statusColor = isDarkTheme ? Colors.red.shade200 : Colors.red.shade900;
       isCritical = true;
     } else if (daysUntilDue < 0) {
       // Past desired interval but still within max — FIX: abs() so it shows "3" not "-3"
       dueText = l10n.overdue(daysUntilDue.abs());
-      statusColor = Colors.orange.shade800;
+      statusColor = isDarkTheme
+          ? Colors.orange.shade300
+          : Colors.orange.shade800;
       isCritical = false;
     } else if (daysUntilDue == 0) {
       dueText = l10n.dueToday;
-      statusColor = Colors.orange.shade700;
+      statusColor = isDarkTheme
+          ? Colors.orange.shade300
+          : Colors.orange.shade700;
       isCritical = false;
     } else {
       dueText = l10n.dueInDays(daysUntilDue);
-      statusColor = Colors.green.shade700;
+      statusColor = isDarkTheme ? Colors.green.shade300 : Colors.green.shade700;
       isCritical = false;
     }
 
@@ -102,8 +109,14 @@ class ChoreListTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       // Critical overrides the "assigned to me" teal tint
       color: isCritical
-          ? Colors.red.shade50
-          : (isAssignedToMe ? Colors.teal.shade50 : null),
+          ? colorScheme.errorContainer.withValues(
+              alpha: isDarkTheme ? 0.36 : 0.58,
+            )
+          : (isAssignedToMe
+                ? colorScheme.primaryContainer.withValues(
+                    alpha: isDarkTheme ? 0.32 : 0.58,
+                  )
+                : null),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,

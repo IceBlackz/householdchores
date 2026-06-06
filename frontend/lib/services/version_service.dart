@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
+import 'connection_validator.dart';
 
 enum VersionStatus {
   compatible,
@@ -32,7 +33,7 @@ class VersionService {
   /// Checks whether the server at [baseUrl] is compatible with this app.
   /// MAJOR versions must match — 1.x ↔ 1.x ✓, 1.x ↔ 2.x ✗
   static Future<VersionCheckResult> checkCompatibility(String baseUrl) async {
-    final uri = Uri.tryParse('$baseUrl/api/householdchores/version');
+    final uri = versionUriFor(baseUrl);
     if (uri == null) {
       return const VersionCheckResult(
         status: VersionStatus.checkFailed,
@@ -90,5 +91,14 @@ class VersionService {
     } catch (_) {
       return 0;
     }
+  }
+
+  static Uri? versionUriFor(String baseUrl) {
+    final baseUri = Uri.tryParse(baseUrl.trim());
+    if (baseUri == null || !baseUri.isAbsolute) return null;
+    return ConnectionValidator.buildEndpointUri(
+      baseUri,
+      'api/householdchores/version',
+    );
   }
 }

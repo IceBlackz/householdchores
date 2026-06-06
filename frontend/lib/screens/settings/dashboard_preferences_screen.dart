@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/dashboard_preferences.dart';
 import '../../services/dashboard_preferences_service.dart';
+import '../../widgets/appearance_settings_section.dart';
 
 class DashboardPreferencesScreen extends StatefulWidget {
   const DashboardPreferencesScreen({super.key});
@@ -82,6 +83,7 @@ class _DashboardPreferencesScreenState
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                const AppearanceSettingsSection(),
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(8, 12, 8, 8),

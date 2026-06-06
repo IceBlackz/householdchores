@@ -79,6 +79,9 @@ class _ConfigurationScreenState extends State<ConfigurationScreen>
       final isValid = await ConnectionValidator.validateHouse(url);
       setState(() {
         _isValid = isValid;
+        _validationError = isValid
+            ? null
+            : 'Could not verify a Household Chores server at this URL. Check the IP address, port, and that your phone is on the same network.';
         _isChecking = false;
       });
     } catch (e) {

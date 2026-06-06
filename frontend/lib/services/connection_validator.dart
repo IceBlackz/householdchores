@@ -54,7 +54,7 @@ class ConnectionValidator {
     int timeoutMs = defaultTimeout,
     int retryLimit = defaultRetryLimit,
   }) async {
-    final healthUri = _buildEndpointUri(uri, 'api/health');
+    final healthUri = buildEndpointUri(uri, 'api/health');
 
     for (int attempt = 0; attempt <= retryLimit; attempt++) {
       final client = http.Client();
@@ -85,7 +85,7 @@ class ConnectionValidator {
   }) async {
     final client = http.Client();
     try {
-      final versionUri = _buildEndpointUri(uri, 'api/householdchores/version');
+      final versionUri = buildEndpointUri(uri, 'api/householdchores/version');
       final response = await client
           .get(versionUri)
           .timeout(Duration(milliseconds: timeoutMs));
@@ -104,7 +104,7 @@ class ConnectionValidator {
     }
   }
 
-  static Uri _buildEndpointUri(Uri baseUri, String endpointPath) {
+  static Uri buildEndpointUri(Uri baseUri, String endpointPath) {
     final pathSegments = [
       ...baseUri.pathSegments.where((segment) => segment.isNotEmpty),
       ...endpointPath.split('/').where((segment) => segment.isNotEmpty),

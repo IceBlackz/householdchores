@@ -23,6 +23,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
   bool _isLoading = false;
+  bool _passwordVisible = false;
   VersionCheckResult? _versionResult;
 
   @override
@@ -288,8 +289,23 @@ class _LoginScreenState extends State<LoginScreen> {
                       key: const ValueKey('login-password-field'),
                       controller: _passwordController,
                       focusNode: _passwordFocusNode,
-                      decoration: InputDecoration(labelText: l10n.password),
-                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: l10n.password,
+                        suffixIcon: IconButton(
+                          tooltip: _passwordVisible
+                              ? 'Hide password'
+                              : 'Show password',
+                          icon: Icon(
+                            _passwordVisible
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                          ),
+                          onPressed: () => setState(() {
+                            _passwordVisible = !_passwordVisible;
+                          }),
+                        ),
+                      ),
+                      obscureText: !_passwordVisible,
                       enableSuggestions: false,
                       autocorrect: false,
                       autofillHints: const [AutofillHints.password],
