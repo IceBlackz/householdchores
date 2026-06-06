@@ -57,6 +57,9 @@ RUN chmod +x /entrypoint.sh
 
 EXPOSE 9010
 
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD wget -q -O /dev/null http://127.0.0.1:9010/api/health || exit 1
+
 ENTRYPOINT ["/entrypoint.sh"]
 
 FROM nginx:alpine AS app
@@ -73,5 +76,8 @@ RUN chmod +x /entrypoint.sh
 
 VOLUME ["/pb/pb_data"]
 EXPOSE 80 9010
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD wget -q -O /dev/null http://127.0.0.1/api/health || exit 1
 
 ENTRYPOINT ["/entrypoint.sh"]

@@ -21,6 +21,7 @@ import '../admin/user_management_screen.dart';
 import '../configuration/configuration_screen.dart';
 import '../complete_chore/complete_chore_screen.dart';
 import '../history/chore_history_screen.dart';
+import '../history/recent_history_screen.dart';
 import '../install/install_guide_screen.dart';
 import '../login/login_screen.dart';
 import '../rooms/rooms_screen.dart';
@@ -33,6 +34,7 @@ enum _DashboardMenuAction {
   manageUsers,
   appSettings,
   dashboardPreferences,
+  history,
   rooms,
   configureHouses,
   language,
@@ -240,6 +242,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ).push(MaterialPageRoute(builder: (_) => const AppSettingsScreen()));
       case _DashboardMenuAction.dashboardPreferences:
         await _openDashboardPreferences();
+      case _DashboardMenuAction.history:
+        await Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const RecentHistoryScreen()));
       case _DashboardMenuAction.rooms:
         await Navigator.of(
           context,
@@ -537,6 +543,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     label: 'Dashboard preferences',
                   ),
                 ),
+              const PopupMenuItem(
+                value: _DashboardMenuAction.history,
+                child: _MenuItem(icon: Icons.history, label: 'Task history'),
+              ),
               if (!isCleaner)
                 const PopupMenuItem(
                   value: _DashboardMenuAction.rooms,
@@ -613,120 +623,138 @@ class _DashboardScreenState extends State<DashboardScreen> {
             )
           : RefreshIndicator(
               onRefresh: _refresh,
-              child: ListView(
+              child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.only(bottom: 88),
-                children: [
-                  _DashboardHeader(
-                    houseName: houseProvider.activeHouseName,
-                    userName: authService.currentUserName,
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: _DashboardHeader(
+                      houseName: houseProvider.activeHouseName,
+                      userName: authService.currentUserName,
+                    ),
                   ),
                   if (chores.isEmpty)
-                    isCleaner
-                        ? const _CleanerEmptyState()
-                        : _EmptyDashboard(
-                            isAdmin: authService.isCurrentUserAdmin,
-                            onAddChore: () async {
+                    SliverToBoxAdapter(
+                      child: isCleaner
+                          ? const _CleanerEmptyState()
+                          : _EmptyDashboard(
+                              isAdmin: authService.isCurrentUserAdmin,
+                              onAddChore: () async {
+                                final result = await Navigator.of(context)
+                                    .push<bool>(
+                                      MaterialPageRoute(
+                                        builder: (_) => const AddChoreScreen(),
+                                      ),
+                                    );
+                                if (result == true) await _refresh();
+                              },
+                              onManageUsers: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const UserManagementScreen(),
+                                ),
+                              ),
+                              onConfigureHouse: () =>
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          const ConfigurationScreen(),
+                                    ),
+                                  ),
+                            ),
+                    )
+                  else ...[
+                    SliverToBoxAdapter(
+                      child: _DashboardStats(
+                        assignedToMe: assignedToMe,
+                        needsAttention: needsAttention,
+                        critical: critical,
+                        total: chores.length,
+                      ),
+                    ),
+                    SliverToBoxAdapter(
+                      child: _WorkloadFilterBar(
+                        selected:
+                            isCleaner &&
+                                _workloadFilter == _DashboardFilter.mine
+                            ? _DashboardFilter.all
+                            : _workloadFilter,
+                        showMineFilter: !isCleaner,
+                        onSelected: (filter) {
+                          setState(() => _workloadFilter = filter);
+                        },
+                      ),
+                    ),
+                    if (!isCleaner)
+                      SliverToBoxAdapter(
+                        child: _RoomFilterBar(
+                          rooms: _rooms,
+                          activeRoomId: _activeRoomId,
+                          onChanged: (roomId) {
+                            setState(() => _activeRoomId = roomId);
+                          },
+                        ),
+                      ),
+                    if (visibleChores.isEmpty)
+                      const SliverToBoxAdapter(child: _FilteredEmptyState())
+                    else
+                      SliverList.builder(
+                        itemCount: visibleChores.length,
+                        itemBuilder: (context, index) {
+                          final chore = visibleChores[index];
+                          final due =
+                              provider.dueDate(chore.id) ?? DateTime.now();
+                          final maxDue =
+                              provider.maxDueDate(chore.id) ?? DateTime.now();
+                          return ChoreListTile(
+                            key: ValueKey(chore.id),
+                            chore: chore,
+                            dueDate: due,
+                            maxDueDate: maxDue,
+                            currentUserId: currentUserId,
+                            onTap: () async {
                               final result = await Navigator.of(context)
                                   .push<bool>(
                                     MaterialPageRoute(
-                                      builder: (_) => const AddChoreScreen(),
+                                      builder: (_) =>
+                                          CompleteChoreScreen(chore: chore),
                                     ),
                                   );
-                              if (result == true) await _refresh();
+                              if (result == true && mounted) {
+                                _showCompletionSuccess();
+                              }
                             },
-                            onManageUsers: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const UserManagementScreen(),
-                              ),
-                            ),
-                            onConfigureHouse: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const ConfigurationScreen(),
-                              ),
-                            ),
-                          )
-                  else ...[
-                    _DashboardStats(
-                      assignedToMe: assignedToMe,
-                      needsAttention: needsAttention,
-                      critical: critical,
-                      total: chores.length,
-                    ),
-                    _WorkloadFilterBar(
-                      selected:
-                          isCleaner && _workloadFilter == _DashboardFilter.mine
-                          ? _DashboardFilter.all
-                          : _workloadFilter,
-                      showMineFilter: !isCleaner,
-                      onSelected: (filter) {
-                        setState(() => _workloadFilter = filter);
-                      },
-                    ),
-                    if (!isCleaner)
-                      _RoomFilterBar(
-                        rooms: _rooms,
-                        activeRoomId: _activeRoomId,
-                        onChanged: (roomId) {
-                          setState(() => _activeRoomId = roomId);
+                            onQuickComplete:
+                                _dashboardPreferences.quickCompleteEnabled
+                                ? () => _quickCompleteChore(chore)
+                                : null,
+                            onEdit: isCleaner
+                                ? null
+                                : () async {
+                                    final result = await Navigator.of(context)
+                                        .push<bool>(
+                                          MaterialPageRoute(
+                                            builder: (_) =>
+                                                AddChoreScreen(chore: chore),
+                                          ),
+                                        );
+                                    if (result == true && mounted) {
+                                      await _refresh();
+                                    }
+                                  },
+                            onDelete: isCleaner
+                                ? null
+                                : () => _confirmDelete(chore),
+                            onHistory: isCleaner
+                                ? null
+                                : () => Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          ChoreHistoryScreen(chore: chore),
+                                    ),
+                                  ),
+                          );
                         },
                       ),
-                    if (visibleChores.isEmpty)
-                      const _FilteredEmptyState()
-                    else
-                      ...visibleChores.map((chore) {
-                        final due =
-                            provider.dueDate(chore.id) ?? DateTime.now();
-                        final maxDue =
-                            provider.maxDueDate(chore.id) ?? DateTime.now();
-                        return ChoreListTile(
-                          chore: chore,
-                          dueDate: due,
-                          maxDueDate: maxDue,
-                          currentUserId: currentUserId,
-                          onTap: () async {
-                            final result = await Navigator.of(context)
-                                .push<bool>(
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        CompleteChoreScreen(chore: chore),
-                                  ),
-                                );
-                            if (result == true && mounted) {
-                              _showCompletionSuccess();
-                            }
-                          },
-                          onQuickComplete:
-                              _dashboardPreferences.quickCompleteEnabled
-                              ? () => _quickCompleteChore(chore)
-                              : null,
-                          onEdit: isCleaner
-                              ? null
-                              : () async {
-                                  final result = await Navigator.of(context)
-                                      .push<bool>(
-                                        MaterialPageRoute(
-                                          builder: (_) =>
-                                              AddChoreScreen(chore: chore),
-                                        ),
-                                      );
-                                  if (result == true && mounted) {
-                                    await _refresh();
-                                  }
-                                },
-                          onDelete: isCleaner
-                              ? null
-                              : () => _confirmDelete(chore),
-                          onHistory: isCleaner
-                              ? null
-                              : () => Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        ChoreHistoryScreen(chore: chore),
-                                  ),
-                                ),
-                        );
-                      }),
+                    const SliverToBoxAdapter(child: SizedBox(height: 88)),
                   ],
                 ],
               ),

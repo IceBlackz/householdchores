@@ -4,6 +4,8 @@ import '../../../l10n/app_localizations.dart';
 import '../../../models/chore.dart';
 import '../../../utils/room_icons.dart';
 
+enum _ChoreTileAction { history, edit, delete }
+
 class ChoreListTile extends StatelessWidget {
   const ChoreListTile({
     super.key,
@@ -78,35 +80,8 @@ class ChoreListTile extends StatelessWidget {
       isCritical = false;
     }
 
-    final actionButtons = <Widget>[
-      if (onQuickComplete != null)
-        IconButton(
-          icon: Icon(Icons.check_circle_outline, color: Colors.green.shade700),
-          tooltip: 'Quick complete',
-          onPressed: onQuickComplete,
-        ),
-      if (onHistory != null)
-        IconButton(
-          icon: const Icon(Icons.history, color: Colors.grey),
-          tooltip: l10n.viewHistory,
-          onPressed: onHistory,
-        ),
-      if (onEdit != null)
-        IconButton(
-          icon: const Icon(Icons.edit, color: Colors.grey),
-          tooltip: l10n.editChoreTooltip,
-          onPressed: onEdit,
-        ),
-      if (onDelete != null)
-        IconButton(
-          icon: Icon(Icons.delete_outline, color: Colors.red.shade300),
-          tooltip: l10n.deleteChoreTooltip,
-          onPressed: onDelete,
-        ),
-    ];
-
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       // Critical overrides the "assigned to me" teal tint
       color: isCritical
           ? colorScheme.errorContainer.withValues(
@@ -122,7 +97,7 @@ class ChoreListTile extends StatelessWidget {
         onTap: onTap,
         onLongPress: onHistory,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+          padding: const EdgeInsets.fromLTRB(14, 12, 10, 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -150,6 +125,64 @@ class ChoreListTile extends StatelessWidget {
                     color: statusColor,
                     isCritical: isCritical,
                   ),
+                  if (onQuickComplete != null) ...[
+                    const SizedBox(width: 2),
+                    IconButton(
+                      visualDensity: VisualDensity.compact,
+                      icon: Icon(
+                        Icons.check_circle_outline,
+                        color: isDarkTheme
+                            ? Colors.green.shade300
+                            : Colors.green.shade700,
+                      ),
+                      tooltip: 'Quick complete',
+                      onPressed: onQuickComplete,
+                    ),
+                  ],
+                  if (onHistory != null || onEdit != null || onDelete != null)
+                    PopupMenuButton<_ChoreTileAction>(
+                      tooltip: 'Task actions',
+                      icon: const Icon(Icons.more_vert),
+                      onSelected: (action) {
+                        switch (action) {
+                          case _ChoreTileAction.history:
+                            onHistory?.call();
+                            break;
+                          case _ChoreTileAction.edit:
+                            onEdit?.call();
+                            break;
+                          case _ChoreTileAction.delete:
+                            onDelete?.call();
+                            break;
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        if (onHistory != null)
+                          PopupMenuItem(
+                            value: _ChoreTileAction.history,
+                            child: _ActionMenuItem(
+                              icon: Icons.history,
+                              label: l10n.viewHistory,
+                            ),
+                          ),
+                        if (onEdit != null)
+                          PopupMenuItem(
+                            value: _ChoreTileAction.edit,
+                            child: _ActionMenuItem(
+                              icon: Icons.edit_outlined,
+                              label: l10n.editChoreTooltip,
+                            ),
+                          ),
+                        if (onDelete != null)
+                          PopupMenuItem(
+                            value: _ChoreTileAction.delete,
+                            child: _ActionMenuItem(
+                              icon: Icons.delete_outline,
+                              label: l10n.deleteChoreTooltip,
+                            ),
+                          ),
+                      ],
+                    ),
                 ],
               ),
               if (chore.description.isNotEmpty) ...[
@@ -201,22 +234,28 @@ class ChoreListTile extends StatelessWidget {
                     ),
                 ],
               ),
-              if (actionButtons.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Wrap(
-                    spacing: 2,
-                    runSpacing: 2,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: actionButtons,
-                  ),
-                ),
-              ],
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ActionMenuItem extends StatelessWidget {
+  const _ActionMenuItem({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 20),
+        const SizedBox(width: 12),
+        Flexible(child: Text(label)),
+      ],
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:pocketbase/pocketbase.dart';
 import '../constants/app_constants.dart';
 import '../models/app_user.dart';
 import '../models/chore.dart';
+import '../models/chore_history_entry.dart';
 import '../models/chore_log.dart';
 import '../models/room.dart';
 import 'pocketbase_service.dart';
@@ -73,6 +74,30 @@ class ChoreService {
           expand: 'completed_by',
         );
     return records.map(ChoreLog.fromRecord).toList();
+  }
+
+  Future<List<ChoreHistoryEntry>> fetchRecentHistory({int limit = 100}) async {
+    final records = await _pb
+        .collection(Collections.choreLogs)
+        .getList(
+          page: 1,
+          perPage: limit,
+          sort: '-created',
+          expand:
+              'completed_by,chore,chore.default_assignee,chore.onetimeonly_assignee,chore.room',
+        );
+
+    return records.items.map((record) {
+      Chore? chore;
+      try {
+        final expandedChore = record.get<RecordModel?>('expand.chore');
+        if (expandedChore != null) {
+          chore = Chore.fromRecord(expandedChore);
+        }
+      } catch (_) {}
+
+      return ChoreHistoryEntry(log: ChoreLog.fromRecord(record), chore: chore);
+    }).toList();
   }
 
   /// [completedBy] defaults to the logged-in user but can be overridden

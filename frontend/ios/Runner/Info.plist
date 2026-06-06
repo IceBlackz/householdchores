@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Household Chores uses the camera to attach before and after chore photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Household Chores uses your photo library to attach before and after chore photos.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

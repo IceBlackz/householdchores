@@ -68,11 +68,37 @@ class _CompleteChoreScreenState extends State<CompleteChoreScreen> {
     super.dispose();
   }
 
-  Future<void> _pickImage(bool isBefore) async {
-    final image = await _picker.pickImage(source: ImageSource.gallery);
+  Future<void> _pickImage(bool isBefore, ImageSource source) async {
+    final image = await _picker.pickImage(source: source);
     if (image != null) {
       setState(() => isBefore ? _beforePhoto = image : _afterPhoto = image);
     }
+  }
+
+  Future<void> _chooseImageSource(bool isBefore) async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: const Text('Take photo'),
+              onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Choose from gallery'),
+              onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null) return;
+    await _pickImage(isBefore, source);
   }
 
   Future<void> _submitLog() async {
@@ -152,7 +178,7 @@ class _CompleteChoreScreenState extends State<CompleteChoreScreen> {
 
           const SizedBox(height: 16),
           OutlinedButton.icon(
-            onPressed: () => _pickImage(true),
+            onPressed: () => _chooseImageSource(true),
             icon: const Icon(Icons.camera_alt),
             label: Text(
               _beforePhoto == null
@@ -162,7 +188,7 @@ class _CompleteChoreScreenState extends State<CompleteChoreScreen> {
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
-            onPressed: () => _pickImage(false),
+            onPressed: () => _chooseImageSource(false),
             icon: const Icon(Icons.camera_alt_outlined),
             label: Text(
               _afterPhoto == null

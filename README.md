@@ -770,6 +770,10 @@ Check that the backend responds:
 curl http://localhost:9010/api/health
 ```
 
+The published all-in-one Docker image also includes a Docker `HEALTHCHECK`
+against `http://127.0.0.1/api/health`, so container dashboards such as Dockhand
+should show healthy/unhealthy status automatically after startup.
+
 If you are using another device, make sure it can reach your server IP on port `9010`.
 
 ### The browser still shows an old interface after updating

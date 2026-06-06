@@ -349,17 +349,40 @@ class StepperControl extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(label),
-      trailing: SegmentedButton<int>(
-        segments: const [
-          ButtonSegment(value: 0, label: Text('0')),
-          ButtonSegment(value: 1, label: Text('1')),
-          ButtonSegment(value: 2, label: Text('2')),
-          ButtonSegment(value: 3, label: Text('3')),
-        ],
-        selected: {value.clamp(0, 3)},
-        onSelectionChanged: (selection) => onChanged(selection.first),
+    final control = SegmentedButton<int>(
+      segments: const [
+        ButtonSegment(value: 0, label: Text('0')),
+        ButtonSegment(value: 1, label: Text('1')),
+        ButtonSegment(value: 2, label: Text('2')),
+        ButtonSegment(value: 3, label: Text('3')),
+      ],
+      selected: {value.clamp(0, 3)},
+      onSelectionChanged: (selection) => onChanged(selection.first),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 420) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: Theme.of(context).textTheme.bodyLarge),
+                const SizedBox(height: 8),
+                control,
+              ],
+            );
+          }
+
+          return Row(
+            children: [
+              Expanded(child: Text(label)),
+              const SizedBox(width: 12),
+              control,
+            ],
+          );
+        },
       ),
     );
   }
